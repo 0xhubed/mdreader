@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter create:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/start.sh:*)",
+      "Bash(echo $PATH)",
+      "Bash(./scripts/dev.sh:*)",
+      "Bash(export PATH=\"$PATH:/home/hubed/projects/nutriLens/flutter/bin\")",
+      "Bash(flutter:*)",
+      "Bash(pkill:*)"
+    ],
+    "deny": []
+  }
+}
