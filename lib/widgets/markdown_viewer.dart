@@ -6,7 +6,7 @@ import '../providers/theme_provider.dart';
 import '../models/app_settings.dart';
 import '../utils/constants.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'syntax_highlighter.dart';
+import 'syntax_highlighter.dart' as custom;
 
 class MarkdownViewer extends StatelessWidget {
   final String markdownContent;
@@ -208,7 +208,7 @@ class MarkdownViewer extends StatelessWidget {
       case FontFamily.roboto:
         return GoogleFonts.roboto;
       case FontFamily.sourceSerif:
-        return GoogleFonts.sourceSerifPro;
+        return GoogleFonts.sourceSerif4;
       case FontFamily.playfair:
         return GoogleFonts.playfairDisplay;
       case FontFamily.lora:
@@ -259,13 +259,17 @@ class CustomTableBuilder extends MarkdownElementBuilder {
   Widget visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     final List<Widget> rows = <Widget>[];
     
-    for (final md.Element child in element.children!) {
-      if (child.tag == 'thead' || child.tag == 'tbody') {
-        for (final md.Element row in child.children!) {
-          rows.add(_buildTableRow(row, child.tag == 'thead'));
+    for (final child in element.children!) {
+      if (child is md.Element) {
+        if (child.tag == 'thead' || child.tag == 'tbody') {
+          for (final row in child.children!) {
+            if (row is md.Element) {
+              rows.add(_buildTableRow(row, child.tag == 'thead'));
+            }
+          }
+        } else if (child.tag == 'tr') {
+          rows.add(_buildTableRow(child, false));
         }
-      } else if (child.tag == 'tr') {
-        rows.add(_buildTableRow(child, false));
       }
     }
 
@@ -294,18 +298,20 @@ class CustomTableBuilder extends MarkdownElementBuilder {
   Widget _buildTableRow(md.Element row, bool isHeader) {
     final List<Widget> cells = <Widget>[];
     
-    for (final md.Element cell in row.children!) {
-      cells.add(
-        Container(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            cell.textContent,
-            style: TextStyle(
-              fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+    for (final cell in row.children!) {
+      if (cell is md.Element) {
+        cells.add(
+          Container(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              cell.textContent,
+              style: TextStyle(
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
-        ),
-      );
+        );
+      }
     }
 
     return Row(children: cells);
@@ -314,18 +320,22 @@ class CustomTableBuilder extends MarkdownElementBuilder {
   List<DataColumn> _buildColumns(md.Element table) {
     final List<DataColumn> columns = <DataColumn>[];
     
-    for (final md.Element child in table.children!) {
-      if (child.tag == 'thead') {
-        for (final md.Element row in child.children!) {
-          for (final md.Element cell in row.children!) {
-            columns.add(DataColumn(
-              label: Text(
-                cell.textContent,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ));
+    for (final child in table.children!) {
+      if (child is md.Element && child.tag == 'thead') {
+        for (final row in child.children!) {
+          if (row is md.Element) {
+            for (final cell in row.children!) {
+              if (cell is md.Element) {
+                columns.add(DataColumn(
+                  label: Text(
+                    cell.textContent,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ));
+              }
+            }
+            break;
           }
-          break;
         }
         break;
       }
@@ -337,14 +347,18 @@ class CustomTableBuilder extends MarkdownElementBuilder {
   List<DataRow> _buildDataRows(md.Element table) {
     final List<DataRow> rows = <DataRow>[];
     
-    for (final md.Element child in table.children!) {
-      if (child.tag == 'tbody') {
-        for (final md.Element row in child.children!) {
-          final List<DataCell> cells = <DataCell>[];
-          for (final md.Element cell in row.children!) {
-            cells.add(DataCell(Text(cell.textContent)));
+    for (final child in table.children!) {
+      if (child is md.Element && child.tag == 'tbody') {
+        for (final row in child.children!) {
+          if (row is md.Element) {
+            final List<DataCell> cells = <DataCell>[];
+            for (final cell in row.children!) {
+              if (cell is md.Element) {
+                cells.add(DataCell(Text(cell.textContent)));
+              }
+            }
+            rows.add(DataRow(cells: cells));
           }
-          rows.add(DataRow(cells: cells));
         }
       }
     }
@@ -395,14 +409,16 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
     if (language == null && element.children != null && element.children!.isNotEmpty) {
       // Try to get language from code element
       final codeElement = element.children!.first;
-      language = codeElement.attributes['class']?.replaceFirst('language-', '');
+      if (codeElement is md.Element) {
+        language = codeElement.attributes['class']?.replaceFirst('language-', '');
+      }
     }
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppConstants.elementSpacing),
-      child: SyntaxHighlighter(
+      child: custom.SyntaxHighlighter(
         code: code,
-        language: SupportedLanguages.normalizeLanguage(language),
+        language: custom.SupportedLanguages.normalizeLanguage(language),
         isDarkMode: themeProvider.isDarkMode,
         fontSize: themeProvider.fontSize.value,
       ),

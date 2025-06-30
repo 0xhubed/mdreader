@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/github.dart';
-import 'package:flutter_highlight/themes/github-dark.dart';
+import 'package:flutter_highlight/themes/vs2015.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SyntaxHighlighter extends StatelessWidget {
@@ -20,7 +20,7 @@ class SyntaxHighlighter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = isDarkMode ? githubDarkTheme : githubTheme;
+    final theme = isDarkMode ? vs2015Theme : githubTheme;
     
     return Container(
       width: double.infinity,
