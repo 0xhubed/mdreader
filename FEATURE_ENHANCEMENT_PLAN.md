@@ -16,70 +16,70 @@ Power-user features and advanced functionality
 
 ## 🗺️ Feature Roadmap
 
-### Version 1.1 - Enhanced Markdown Support (2-3 weeks)
+### Version 1.1 - Enhanced Markdown Support ✅ COMPLETED
 #### Advanced Markdown Rendering
-- [ ] **Table Support**
+- [x] **Table Support**
   - Responsive table layout
   - Horizontal scrolling for wide tables
   - Custom table styling
   
-- [ ] **Task Lists**
+- [x] **Task Lists**
   - Interactive checkboxes (read-only)
   - Custom checkbox styling
   - Progress indicators for task completion
   
-- [ ] **Syntax Highlighting**
+- [x] **Syntax Highlighting**
   - Code block syntax highlighting
   - Support for 20+ programming languages
   - Multiple theme options for code
   
-- [ ] **Enhanced Typography**
+- [x] **Enhanced Typography**
   - Custom font family selection
   - Reading mode (sepia/paper theme)
   - Advanced line spacing controls
   - Text justification options
 
-### Version 1.2 - File Management (2-3 weeks)
+### Version 1.2 - File Management ✅ COMPLETED
 #### Smart File Handling
-- [ ] **Recent Files**
+- [x] **Recent Files**
   - Recent files list with thumbnails
   - Quick access from home screen
   - File metadata (size, last modified)
   - Smart sorting options
   
-- [ ] **File Validation & Security**
+- [x] **File Validation & Security**
   - Enhanced file type detection
   - File size warnings
   - Encoding detection and conversion
   - Malformed file handling
   
-- [ ] **Performance Optimization**
+- [x] **Performance Optimization**
   - Lazy loading for large files
   - Memory management improvements
   - Background file parsing
   - Progressive rendering
 
-### Version 1.3 - Navigation & Search (3-4 weeks)
+### Version 1.3 - Navigation & Search ✅ COMPLETED
 #### Document Navigation
-- [ ] **Table of Contents**
+- [x] **Table of Contents**
   - Auto-generated TOC from headings
   - Expandable/collapsible sections
   - Jump-to-section functionality
   - TOC overlay/sidebar
   
-- [ ] **Document Outline**
+- [x] **Document Outline**
   - Floating outline widget
   - Reading progress indicator
   - Current section highlighting
   - Mini-map style navigation
   
-- [ ] **In-Document Search**
+- [x] **In-Document Search**
   - Full-text search within document
   - Highlight search results
   - Search result navigation (next/previous)
   - Case-sensitive search options
   
-- [ ] **Reading Position**
+- [x] **Reading Position**
   - Remember reading position per file
   - Bookmark functionality
   - Quick jump to bookmarks

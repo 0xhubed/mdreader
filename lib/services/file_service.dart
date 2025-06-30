@@ -1,9 +1,19 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import '../models/document.dart';
 
 class FileService {
   static const List<String> _allowedExtensions = ['md', 'markdown', 'txt'];
+  static const int _maxFileSizeBytes = 50 * 1024 * 1024; // 50MB limit
+  static const List<String> _dangerousPatterns = [
+    r'<script[^>]*>.*?</script>',
+    r'javascript:',
+    r'data:text/html',
+    r'onclick\s*=',
+    r'onload\s*=',
+    r'onerror\s*=',
+  ];
 
   Future<Document?> pickAndReadFile() async {
     try {
@@ -23,25 +33,41 @@ class FileService {
     }
   }
 
+  Future<Document?> readFile(String filePath) async {
+    try {
+      return await _readFileFromPath(filePath);
+    } catch (e) {
+      throw FileServiceException('Failed to read file: $e');
+    }
+  }
+
   Future<Document> _readFileFromPath(String filePath) async {
     try {
       final file = File(filePath);
       
-      if (!await file.exists()) {
-        throw FileServiceException('File does not exist');
-      }
-
+      // Basic file existence and security checks
+      await _performSecurityChecks(file, filePath);
+      
       final stat = await file.stat();
-      final content = await file.readAsString();
       final fileName = _extractFileName(filePath);
 
+      // File type validation
       if (!_isValidMarkdownFile(fileName)) {
-        throw FileServiceException('Unsupported file type');
+        throw FileServiceException('Unsupported file type: ${_getFileExtension(fileName)}');
       }
 
-      if (stat.size > 10 * 1024 * 1024) { // 10MB limit
-        throw FileServiceException('File too large (max 10MB)');
+      // File size validation
+      if (stat.size > _maxFileSizeBytes) {
+        throw FileServiceException('File too large (max ${formatFileSize(_maxFileSizeBytes)})');
       }
+
+      // Empty file check
+      if (stat.size == 0) {
+        throw FileServiceException('File is empty');
+      }
+
+      // Read and validate file content
+      final content = await _readAndValidateContent(file);
 
       return Document.fromFile(
         fileName: fileName,
@@ -56,12 +82,113 @@ class FileService {
     }
   }
 
+  Future<void> _performSecurityChecks(File file, String filePath) async {
+    // Check file existence
+    if (!await file.exists()) {
+      throw FileServiceException('File does not exist');
+    }
+
+    // Check for directory traversal attempts
+    if (filePath.contains('..') || filePath.contains('~')) {
+      throw FileServiceException('Invalid file path');
+    }
+
+    // Check file permissions
+    try {
+      final stat = await file.stat();
+      
+      // Check if it's actually a file and not a directory
+      if (stat.type != FileSystemEntityType.file) {
+        throw FileServiceException('Selected item is not a file');
+      }
+      
+      // Check file permissions (readable)
+      final testRead = await file.openRead(0, 1).isEmpty;
+      if (testRead) {
+        throw FileServiceException('File appears to be empty or unreadable');
+      }
+    } catch (e) {
+      if (e is FileServiceException) rethrow;
+      throw FileServiceException('Cannot access file: $e');
+    }
+  }
+
+  Future<String> _readAndValidateContent(File file) async {
+    try {
+      // Try to read as UTF-8 first
+      String content;
+      try {
+        content = await file.readAsString(encoding: utf8);
+      } catch (e) {
+        // If UTF-8 fails, try latin1
+        try {
+          content = await file.readAsString(encoding: latin1);
+        } catch (e) {
+          throw FileServiceException('Unable to decode file content. Please ensure the file is a valid text file.');
+        }
+      }
+
+      // Security validation - check for potentially dangerous content
+      _validateContentSecurity(content);
+
+      // Basic content validation
+      if (content.trim().isEmpty) {
+        throw FileServiceException('File appears to be empty');
+      }
+
+      // Check for binary content indicators
+      if (_containsBinaryContent(content)) {
+        throw FileServiceException('File appears to contain binary data');
+      }
+
+      return content;
+    } catch (e) {
+      if (e is FileServiceException) rethrow;
+      throw FileServiceException('Failed to read file content: $e');
+    }
+  }
+
+  void _validateContentSecurity(String content) {
+    // Check for potentially dangerous patterns
+    for (final pattern in _dangerousPatterns) {
+      final regex = RegExp(pattern, caseSensitive: false);
+      if (regex.hasMatch(content)) {
+        throw FileServiceException('File contains potentially unsafe content');
+      }
+    }
+
+    // Check for excessive HTML tags (might indicate HTML file disguised as markdown)
+    final htmlTagCount = RegExp(r'<[^>]+>').allMatches(content).length;
+    final totalLines = content.split('\n').length;
+    
+    if (htmlTagCount > totalLines * 0.3) {
+      throw FileServiceException('File appears to be HTML rather than Markdown');
+    }
+  }
+
+  bool _containsBinaryContent(String content) {
+    // Check for null bytes and other binary indicators
+    if (content.contains('\x00')) return true;
+    
+    // Check for high ratio of non-printable characters
+    final nonPrintableCount = content.runes.where((rune) {
+      return rune < 32 && rune != 9 && rune != 10 && rune != 13; // Exclude tab, LF, CR
+    }).length;
+    
+    return nonPrintableCount > content.length * 0.1;
+  }
+
   String _extractFileName(String filePath) {
     return filePath.split('/').last;
   }
 
+  String _getFileExtension(String fileName) {
+    final parts = fileName.toLowerCase().split('.');
+    return parts.length > 1 ? parts.last : 'unknown';
+  }
+
   bool _isValidMarkdownFile(String fileName) {
-    final extension = fileName.toLowerCase().split('.').last;
+    final extension = _getFileExtension(fileName);
     return _allowedExtensions.contains(extension);
   }
 

@@ -2,13 +2,302 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/document_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/recent_files_provider.dart';
+import '../providers/reading_position_provider.dart';
 import '../widgets/markdown_viewer.dart';
+import '../widgets/streaming_markdown_viewer.dart';
+import '../widgets/table_of_contents_widget.dart';
+import '../widgets/search_widget.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
+import '../models/table_of_contents.dart';
+import '../models/search_result.dart';
+import '../models/reading_position.dart';
+import '../services/table_of_contents_service.dart';
+import '../services/search_service.dart';
 import 'home_screen.dart';
 
-class ReaderScreen extends StatelessWidget {
+class ReaderScreen extends StatefulWidget {
   const ReaderScreen({super.key});
+
+  @override
+  State<ReaderScreen> createState() => _ReaderScreenState();
+}
+
+class _ReaderScreenState extends State<ReaderScreen> {
+  late ScrollController _scrollController;
+  List<TocItem> _tocItems = [];
+  TocItem? _currentTocItem;
+  bool _isSearchVisible = false;
+  List<Bookmark> _bookmarks = [];
+  bool _isLoadingPosition = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final documentProvider = context.read<DocumentProvider>();
+      final recentFilesProvider = context.read<RecentFilesProvider>();
+      
+      if (documentProvider.hasDocument) {
+        recentFilesProvider.addRecentFile(documentProvider.currentDocument!.filePath);
+        _generateTableOfContents(documentProvider.currentDocument!.content);
+        _loadReadingPosition();
+        _loadBookmarks();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _generateTableOfContents(String content) {
+    setState(() {
+      _tocItems = TableOfContentsService.generateTOC(content);
+    });
+  }
+
+  void _onTocItemTapped(TocItem item) {
+    Navigator.of(context).pop(); // Close drawer
+    
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument) return;
+    
+    final content = documentProvider.currentDocument!.content;
+    final scrollRatio = TableOfContentsService.calculateScrollRatio(content, item.lineNumber);
+    
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final targetOffset = maxScrollExtent * scrollRatio;
+    
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+    
+    setState(() {
+      _currentTocItem = item;
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchVisible = !_isSearchVisible;
+    });
+  }
+
+  void _onSearchResultTapped(SearchResult result) {
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument) return;
+    
+    final content = documentProvider.currentDocument!.content;
+    final scrollRatio = SearchService.calculateScrollPosition(content, result.lineNumber);
+    
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final targetOffset = maxScrollExtent * scrollRatio;
+    
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _closeSearch() {
+    setState(() {
+      _isSearchVisible = false;
+    });
+  }
+
+  void _onScroll() {
+    // Debounce scroll position saving
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      _saveReadingPosition();
+    });
+  }
+
+  Future<void> _loadReadingPosition() async {
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument) return;
+
+    setState(() {
+      _isLoadingPosition = true;
+    });
+
+    final positionProvider = context.read<ReadingPositionProvider>();
+    final position = await positionProvider.getReadingPosition(
+      documentProvider.currentDocument!.filePath,
+    );
+
+    if (position != null && mounted) {
+      // Restore scroll position
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final maxScrollExtent = _scrollController.position.maxScrollExtent;
+          final targetOffset = positionProvider.calculateScrollOffset(
+            position.scrollPosition,
+            maxScrollExtent,
+          );
+          
+          _scrollController.jumpTo(targetOffset);
+        }
+      });
+    }
+
+    setState(() {
+      _isLoadingPosition = false;
+    });
+  }
+
+  Future<void> _saveReadingPosition() async {
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument || !_scrollController.hasClients) return;
+
+    final positionProvider = context.read<ReadingPositionProvider>();
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final currentOffset = _scrollController.offset;
+
+    final scrollPosition = positionProvider.calculateScrollPosition(
+      documentProvider.currentDocument!.content,
+      currentOffset,
+      maxScrollExtent,
+    );
+
+    final readingPosition = ReadingPosition(
+      filePath: documentProvider.currentDocument!.filePath,
+      scrollPosition: scrollPosition,
+      lastAccessed: DateTime.now(),
+      currentSection: _currentTocItem?.title,
+    );
+
+    await positionProvider.saveReadingPosition(readingPosition);
+  }
+
+  Future<void> _loadBookmarks() async {
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument) return;
+
+    final positionProvider = context.read<ReadingPositionProvider>();
+    final bookmarks = positionProvider.getBookmarksForFile(
+      documentProvider.currentDocument!.filePath,
+    );
+
+    setState(() {
+      _bookmarks = bookmarks;
+    });
+  }
+
+  Future<void> _addBookmark() async {
+    final documentProvider = context.read<DocumentProvider>();
+    if (!documentProvider.hasDocument || !_scrollController.hasClients) return;
+
+    final positionProvider = context.read<ReadingPositionProvider>();
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final currentOffset = _scrollController.offset;
+
+    final scrollPosition = positionProvider.calculateScrollPosition(
+      documentProvider.currentDocument!.content,
+      currentOffset,
+      maxScrollExtent,
+    );
+
+    // Show dialog to get bookmark title and note
+    await _showAddBookmarkDialog(scrollPosition);
+  }
+
+  Future<void> _showAddBookmarkDialog(double position) async {
+    final titleController = TextEditingController();
+    final noteController = TextEditingController();
+    
+    // Set default title based on current section
+    if (_currentTocItem != null) {
+      titleController.text = 'At "${_currentTocItem!.title}"';
+    } else {
+      titleController.text = 'Bookmark at ${(position * 100).toStringAsFixed(1)}%';
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Bookmark'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  hintText: 'Enter bookmark title',
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(
+                  labelText: 'Note (optional)',
+                  hintText: 'Add a note for this bookmark',
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true && titleController.text.isNotEmpty) {
+      final documentProvider = context.read<DocumentProvider>();
+      final bookmark = Bookmark(
+        filePath: documentProvider.currentDocument!.filePath,
+        position: position,
+        title: titleController.text,
+        note: noteController.text.isEmpty ? null : noteController.text,
+        section: _currentTocItem?.title,
+      );
+
+      final positionProvider = context.read<ReadingPositionProvider>();
+      await positionProvider.addBookmark(bookmark);
+      await _loadBookmarks();
+    }
+
+    titleController.dispose();
+    noteController.dispose();
+  }
+
+  void _jumpToBookmark(Bookmark bookmark) {
+    if (!_scrollController.hasClients) return;
+
+    final positionProvider = context.read<ReadingPositionProvider>();
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final targetOffset = positionProvider.calculateScrollOffset(
+      bookmark.position,
+      maxScrollExtent,
+    );
+
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +317,15 @@ class ReaderScreen extends StatelessWidget {
         final document = documentProvider.currentDocument!;
 
         return Scaffold(
+          drawer: _tocItems.isNotEmpty 
+              ? Drawer(
+                  child: TableOfContentsWidget(
+                    tocItems: _tocItems,
+                    onItemTapped: _onTocItemTapped,
+                    currentItem: _currentTocItem,
+                  ),
+                )
+              : null,
           appBar: AppBar(
             title: Text(
               document.fileName,
@@ -39,6 +337,59 @@ class ReaderScreen extends StatelessWidget {
               tooltip: 'Back to home',
             ),
             actions: [
+              IconButton(
+                onPressed: _addBookmark,
+                icon: const Icon(Icons.bookmark_add),
+                tooltip: 'Add bookmark',
+              ),
+              if (_bookmarks.isNotEmpty)
+                PopupMenuButton<Bookmark>(
+                  onSelected: _jumpToBookmark,
+                  icon: const Icon(Icons.bookmarks),
+                  tooltip: 'Bookmarks',
+                  itemBuilder: (context) => _bookmarks.map((bookmark) {
+                    return PopupMenuItem<Bookmark>(
+                      value: bookmark,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            bookmark.title,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (bookmark.note != null)
+                            Text(
+                              bookmark.note!,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          Text(
+                            bookmark.displayDescription,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              IconButton(
+                onPressed: _toggleSearch,
+                icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
+                tooltip: _isSearchVisible ? 'Close search' : 'Search in document',
+              ),
+              if (_tocItems.isNotEmpty)
+                IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  icon: const Icon(Icons.list_alt),
+                  tooltip: 'Table of contents',
+                ),
               IconButton(
                 onPressed: () => _showDocumentInfo(context, document),
                 icon: const Icon(Icons.info_outline),
@@ -62,8 +413,21 @@ class ReaderScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: MarkdownViewer(
-            markdownContent: document.content,
+          body: Column(
+            children: [
+              if (_isSearchVisible)
+                SearchWidget(
+                  documentContent: document.content,
+                  onResultTapped: _onSearchResultTapped,
+                  onClose: _closeSearch,
+                ),
+              Expanded(
+                child: StreamingMarkdownViewer(
+                  markdownContent: document.content,
+                  scrollController: _scrollController,
+                ),
+              ),
+            ],
           ),
           bottomNavigationBar: Container(
             padding: const EdgeInsets.all(AppConstants.contentPadding),

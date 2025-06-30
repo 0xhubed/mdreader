@@ -42,6 +42,26 @@ class DocumentProvider with ChangeNotifier {
     }
   }
 
+  Future<void> openFile(String filePath) async {
+    _setState(DocumentState.loading);
+    
+    try {
+      final document = await _fileService.readFile(filePath);
+      
+      if (document != null) {
+        _currentDocument = document;
+        _errorMessage = null;
+        _setState(DocumentState.loaded);
+      } else {
+        _errorMessage = 'Failed to read file';
+        _setState(DocumentState.error);
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setState(DocumentState.error);
+    }
+  }
+
   void clearDocument() {
     _currentDocument = null;
     _errorMessage = null;

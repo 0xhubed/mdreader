@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/document_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/recent_files_provider.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
+import '../widgets/recent_files_widget.dart';
 import 'reader_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -56,45 +58,103 @@ class HomeScreen extends StatelessWidget {
             return const SizedBox.shrink();
           }
 
-          return _buildEmptyState(context);
+          return _buildHomeContent(context);
         },
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildHomeContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppConstants.contentPadding),
+      child: Column(
+        children: [
+          _buildOpenFileSection(context),
+          const SizedBox(height: AppConstants.sectionSpacing),
+          Expanded(
+            child: Consumer<RecentFilesProvider>(
+              builder: (context, recentFilesProvider, _) {
+                if (recentFilesProvider.hasRecentFiles) {
+                  return RecentFilesWidget(
+                    onFileSelected: (filePath) => _openSpecificFile(context, filePath),
+                  );
+                } else {
+                  return _buildEmptyRecentFiles(context);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOpenFileSection(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.contentPadding),
+        child: Column(
+          children: [
+            Icon(
+              Icons.description_outlined,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+            ),
+            const SizedBox(height: AppConstants.elementSpacing),
+            Text(
+              AppStrings.noDocumentTitle,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppConstants.elementSpacing / 2),
+            Text(
+              AppStrings.noDocumentSubtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppConstants.elementSpacing),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openFile(context),
+                icon: const Icon(Icons.folder_open),
+                label: const Text(AppStrings.openFileButtonText),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyRecentFiles(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.description_outlined,
-            size: 80,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          const SizedBox(height: AppConstants.sectionSpacing),
-          Text(
-            AppStrings.noDocumentTitle,
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
+            Icons.history,
+            size: 48,
+            color: theme.disabledColor,
           ),
           const SizedBox(height: AppConstants.elementSpacing),
           Text(
-            AppStrings.noDocumentSubtitle,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).textTheme.bodySmall?.color,
+            'No Recent Files',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.disabledColor,
+            ),
+          ),
+          const SizedBox(height: AppConstants.elementSpacing / 2),
+          Text(
+            'Files you open will appear here for quick access',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.disabledColor,
             ),
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppConstants.sectionSpacing * 2),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _openFile(context),
-              icon: const Icon(Icons.folder_open),
-              label: const Text(AppStrings.openFileButtonText),
-            ),
           ),
         ],
       ),
@@ -150,6 +210,10 @@ class HomeScreen extends StatelessWidget {
 
   void _openFile(BuildContext context) {
     context.read<DocumentProvider>().pickAndOpenFile();
+  }
+
+  void _openSpecificFile(BuildContext context, String filePath) {
+    context.read<DocumentProvider>().openFile(filePath);
   }
 
   void _showSettingsDialog(BuildContext context) {

@@ -13,6 +13,9 @@ class ThemeProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   AppThemeMode get themeMode => _settings.themeMode;
   FontSize get fontSize => _settings.fontSize;
+  FontFamily get fontFamily => _settings.fontFamily;
+  ReadingMode get readingMode => _settings.readingMode;
+  LineSpacing get lineSpacing => _settings.lineSpacing;
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -35,6 +38,21 @@ class ThemeProvider with ChangeNotifier {
 
   Future<void> setFontSize(FontSize fontSize) async {
     final newSettings = _settings.copyWith(fontSize: fontSize);
+    await _updateSettings(newSettings);
+  }
+
+  Future<void> setFontFamily(FontFamily fontFamily) async {
+    final newSettings = _settings.copyWith(fontFamily: fontFamily);
+    await _updateSettings(newSettings);
+  }
+
+  Future<void> setReadingMode(ReadingMode readingMode) async {
+    final newSettings = _settings.copyWith(readingMode: readingMode);
+    await _updateSettings(newSettings);
+  }
+
+  Future<void> setLineSpacing(LineSpacing lineSpacing) async {
+    final newSettings = _settings.copyWith(lineSpacing: lineSpacing);
     await _updateSettings(newSettings);
   }
 
