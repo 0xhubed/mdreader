@@ -10,7 +10,9 @@
       "Bash(./scripts/dev.sh:*)",
       "Bash(export PATH=\"$PATH:/home/hubed/projects/nutriLens/flutter/bin\")",
       "Bash(flutter:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(./start.sh:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
