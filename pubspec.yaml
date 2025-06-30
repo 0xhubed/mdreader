@@ -19,6 +19,7 @@ dependencies:
   markdown: ^7.1.1
   path_provider: ^2.1.1
   uuid: ^4.0.0
+  flutter_colorpicker: ^1.0.3
 
 dev_dependencies:
   flutter_test:

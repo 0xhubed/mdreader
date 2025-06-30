@@ -8,8 +8,14 @@ import '../widgets/markdown_viewer.dart';
 import '../widgets/streaming_markdown_viewer.dart';
 import '../widgets/table_of_contents_widget.dart';
 import '../widgets/search_widget.dart';
+import '../widgets/reading_mode_selector.dart';
+import '../widgets/display_mode_selector.dart';
+import '../widgets/gesture_handler.dart';
+import '../widgets/gesture_settings_dialog.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
+import '../models/reading_settings.dart';
+import '../models/gesture_settings.dart';
 import '../models/table_of_contents.dart';
 import '../models/search_result.dart';
 import '../models/reading_position.dart';
@@ -31,6 +37,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _isSearchVisible = false;
   List<Bookmark> _bookmarks = [];
   bool _isLoadingPosition = false;
+  GestureSettings _gestureSettings = GestureSettings.defaultSettings;
 
   @override
   void initState() {
@@ -379,6 +386,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     );
                   }).toList(),
                 ),
+              const ReadingModeQuickToggle(),
+              const DisplayModeQuickToggle(),
               IconButton(
                 onPressed: _toggleSearch,
                 icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
@@ -390,44 +399,78 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   icon: const Icon(Icons.list_alt),
                   tooltip: 'Table of contents',
                 ),
-              IconButton(
-                onPressed: () => _showDocumentInfo(context, document),
-                icon: const Icon(Icons.info_outline),
-                tooltip: 'Document info',
-              ),
-              Consumer<ThemeProvider>(
-                builder: (context, themeProvider, _) {
-                  return IconButton(
-                    onPressed: themeProvider.toggleTheme,
-                    icon: Icon(
-                      themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                    ),
-                    tooltip: 'Toggle theme',
-                  );
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                tooltip: 'More options',
+                onSelected: (value) {
+                  switch (value) {
+                    case 'info':
+                      _showDocumentInfo(context, document);
+                      break;
+                    case 'settings':
+                      _showSettingsDialog(context);
+                      break;
+                    case 'reading_settings':
+                      _showReadingSettingsDialog(context);
+                      break;
+                    case 'gesture_settings':
+                      _showGestureSettingsDialog(context);
+                      break;
+                  }
                 },
-              ),
-              IconButton(
-                onPressed: () => _showSettingsDialog(context),
-                icon: const Icon(Icons.settings),
-                tooltip: 'Settings',
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'info',
+                    child: ListTile(
+                      leading: Icon(Icons.info_outline),
+                      title: Text('Document Info'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'settings',
+                    child: ListTile(
+                      leading: Icon(Icons.settings),
+                      title: Text('Settings'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'reading_settings',
+                    child: ListTile(
+                      leading: Icon(Icons.tune),
+                      title: Text('Reading Settings'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'gesture_settings',
+                    child: ListTile(
+                      leading: Icon(Icons.gesture),
+                      title: Text('Gestures & Shortcuts'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          body: Column(
-            children: [
-              if (_isSearchVisible)
-                SearchWidget(
-                  documentContent: document.content,
-                  onResultTapped: _onSearchResultTapped,
-                  onClose: _closeSearch,
+          body: GestureHandler(
+            onGestureAction: _handleGestureAction,
+            gestureSettings: _gestureSettings,
+            scrollController: _scrollController,
+            child: Column(
+              children: [
+                if (_isSearchVisible)
+                  SearchWidget(
+                    documentContent: document.content,
+                    onResultTapped: _onSearchResultTapped,
+                    onClose: _closeSearch,
+                  ),
+                Expanded(
+                  child: StreamingMarkdownViewer(
+                    markdownContent: document.content,
+                    scrollController: _scrollController,
+                  ),
                 ),
-              Expanded(
-                child: StreamingMarkdownViewer(
-                  markdownContent: document.content,
-                  scrollController: _scrollController,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           bottomNavigationBar: Container(
             padding: const EdgeInsets.all(AppConstants.contentPadding),
@@ -578,6 +621,19 @@ class SettingsDialog extends StatelessWidget {
                   }).toList(),
                 ),
               ),
+              const Divider(),
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(
+                  'Reading Mode',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              const ReadingModeSelector(
+                showLabels: false,
+                isHorizontal: true,
+              ),
+              const SizedBox(height: 8),
             ],
           );
         },
@@ -599,6 +655,58 @@ class SettingsDialog extends StatelessWidget {
         return 'Dark';
       case AppThemeMode.system:
         return 'System';
+    }
+  }
+
+  void _showReadingSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const ReadingSettingsDialog(),
+    );
+  }
+
+  void _showGestureSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => GestureSettingsDialog(
+        initialSettings: _gestureSettings,
+        onSettingsChanged: (settings) {
+          setState(() {
+            _gestureSettings = settings;
+          });
+        },
+      ),
+    );
+  }
+
+  void _handleGestureAction(GestureAction action) {
+    final handler = GestureActionHandler(context, scrollController: _scrollController);
+    
+    switch (action) {
+      case GestureAction.openSearch:
+        if (!_isSearchVisible) _toggleSearch();
+        break;
+      case GestureAction.closeSearch:
+        if (_isSearchVisible) _toggleSearch();
+        break;
+      case GestureAction.openTableOfContents:
+        if (_tocItems.isNotEmpty) {
+          Scaffold.of(context).openDrawer();
+        }
+        break;
+      case GestureAction.addBookmark:
+        _addBookmark();
+        break;
+      case GestureAction.openSettings:
+        _showSettingsDialog(context);
+        break;
+      case GestureAction.openFile:
+        _openNewFile(context);
+        break;
+      default:
+        // Handle other actions through the common handler
+        handler.handleAction(action);
+        break;
     }
   }
 }

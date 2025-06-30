@@ -85,31 +85,37 @@ Power-user features and advanced functionality
   - Quick jump to bookmarks
   - Reading session history
 
-### Version 1.4 - User Experience Enhancements (2-3 weeks)
+### Version 1.4 - User Experience Enhancements ✅ COMPLETED
 #### Advanced UI/UX
-- [ ] **Custom Themes**
-  - User-defined color schemes
-  - Theme marketplace/presets
+- [x] **Custom Themes**
+  - User-defined color schemes with full color picker
+  - Built-in theme presets (Default Light/Dark, Sepia, High Contrast, Midnight, Forest)
   - High contrast accessibility themes
-  - Custom theme import/export
+  - Custom theme import/export functionality
+  - Theme gallery with preview and management
   
-- [ ] **Reading Modes**
-  - Focus mode (hide UI elements)
-  - Presentation mode (larger text)
-  - Immersive full-screen reading
-  - Distraction-free mode
+- [x] **Reading Modes**
+  - Focus mode (hide UI elements with auto-hide controls)
+  - Presentation mode (larger text for presentations)
+  - Immersive full-screen reading experience
+  - Distraction-free mode (minimal UI)
+  - Quick toggle and selector widgets
   
-- [ ] **Accessibility Features**
-  - Screen reader optimization
-  - High contrast mode
-  - Font size accessibility
+- [x] **Accessibility Features**
+  - Screen reader optimization with semantic labels
+  - High contrast mode with system integration
+  - Font size accessibility with text scale factor
   - Voice-over support improvements
+  - Motor accessibility with larger touch targets
+  - Haptic and sound feedback options
+  - Accessibility presets for different needs
   
-- [ ] **Gestures & Shortcuts**
-  - Swipe navigation
-  - Pinch-to-zoom
-  - Keyboard shortcuts (when available)
-  - Custom gesture configuration
+- [x] **Gestures & Shortcuts**
+  - Swipe navigation (up/down for scroll, left/right for actions)
+  - Pinch-to-zoom for text scaling
+  - Comprehensive keyboard shortcuts (Ctrl+F, Ctrl+O, etc.)
+  - Custom gesture configuration with sensitivity settings
+  - Multi-finger tap gestures for advanced actions
 
 ### Version 1.5 - Advanced Features (4-5 weeks)
 #### Power User Features
