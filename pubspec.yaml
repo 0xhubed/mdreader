@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_markdown: ^0.6.18
-  file_picker: ^6.1.1
+  file_picker: ^8.0.0
   shared_preferences: ^2.2.2
   provider: ^6.1.1
   google_fonts: ^6.1.0
