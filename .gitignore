@@ -130,3 +130,9 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Firebase configuration files (contain sensitive data)
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.firebase/
