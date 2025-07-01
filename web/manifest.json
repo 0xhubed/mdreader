@@ -1,11 +1,11 @@
 {
-    "name": "mdreader",
-    "short_name": "mdreader",
+    "name": "MDReader - Markdown Viewer",
+    "short_name": "MDReader",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#2196F3",
+    "description": "A privacy-first offline Markdown reader",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
