@@ -26,6 +26,7 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
   late ScrollController _scrollController;
   final List<int> _loadedChunks = [];
   bool _isLargeFile = false;
+  bool _needsSort = false;
   
   @override
   void initState() {
@@ -100,6 +101,7 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
     if (!_loadedChunks.contains(chunkIndex)) {
       setState(() {
         _loadedChunks.add(chunkIndex);
+        _needsSort = true;
         
         // Also load adjacent chunks for smooth scrolling
         if (chunkIndex > 0 && !_loadedChunks.contains(chunkIndex - 1)) {
@@ -133,6 +135,7 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
     setState(() {
       _loadedChunks.clear();
       _loadedChunks.addAll(chunksToKeep);
+      _needsSort = true;
     });
   }
 
@@ -141,7 +144,12 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
       return widget.markdownContent;
     }
     
-    _loadedChunks.sort();
+    // Only sort when chunks have changed
+    if (_needsSort) {
+      _loadedChunks.sort();
+      _needsSort = false;
+    }
+    
     final buffer = StringBuffer();
     
     for (final chunkIndex in _loadedChunks) {
@@ -161,6 +169,7 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
           _buildPerformanceIndicator(),
           Expanded(
             child: MarkdownViewer(
+              key: ValueKey('large_${_loadedChunks.join('_')}'),
               markdownContent: _getVisibleContent(),
               scrollController: _scrollController,
             ),
@@ -170,6 +179,7 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
     }
     
     return MarkdownViewer(
+      key: ValueKey('small_${widget.markdownContent.hashCode}'),
       markdownContent: widget.markdownContent,
       scrollController: _scrollController,
     );

@@ -12,7 +12,10 @@
       "Bash(flutter:*)",
       "Bash(pkill:*)",
       "Bash(./start.sh:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(rg:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

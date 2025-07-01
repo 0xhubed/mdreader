@@ -15,6 +15,10 @@ class DocumentProvider with ChangeNotifier {
   DocumentState _state = DocumentState.initial;
   Document? _currentDocument;
   String? _errorMessage;
+  
+  // Cached computed values
+  String? _cachedFileSize;
+  String? _cachedLastModified;
 
   DocumentState get state => _state;
   Document? get currentDocument => _currentDocument;
@@ -32,6 +36,7 @@ class DocumentProvider with ChangeNotifier {
       if (document != null) {
         _currentDocument = document;
         _errorMessage = null;
+        _clearCache();
         _setState(DocumentState.loaded);
       } else {
         _setState(DocumentState.initial);
@@ -51,6 +56,7 @@ class DocumentProvider with ChangeNotifier {
       if (document != null) {
         _currentDocument = document;
         _errorMessage = null;
+        _clearCache();
         _setState(DocumentState.loaded);
       } else {
         _errorMessage = 'Failed to read file';
@@ -65,6 +71,7 @@ class DocumentProvider with ChangeNotifier {
   void clearDocument() {
     _currentDocument = null;
     _errorMessage = null;
+    _clearCache();
     _setState(DocumentState.initial);
   }
 
@@ -82,12 +89,20 @@ class DocumentProvider with ChangeNotifier {
 
   String get formattedFileSize {
     if (_currentDocument == null) return '';
-    return _fileService.formatFileSize(_currentDocument!.fileSize);
+    return _cachedFileSize ??= _fileService.formatFileSize(_currentDocument!.fileSize);
   }
 
   String get formattedLastModified {
     if (_currentDocument == null) return '';
-    final date = _currentDocument!.lastModified;
+    return _cachedLastModified ??= _formatLastModified(_currentDocument!.lastModified);
+  }
+  
+  String _formatLastModified(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+  
+  void _clearCache() {
+    _cachedFileSize = null;
+    _cachedLastModified = null;
   }
 }

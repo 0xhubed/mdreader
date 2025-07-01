@@ -22,6 +22,8 @@ class MarkdownViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
+        final readingSettings = themeProvider.readingSettings;
+        
         return Markdown(
           data: markdownContent,
           controller: scrollController,

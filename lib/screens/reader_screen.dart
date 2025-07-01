@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/document_provider.dart';
@@ -10,12 +11,9 @@ import '../widgets/table_of_contents_widget.dart';
 import '../widgets/search_widget.dart';
 import '../widgets/reading_mode_selector.dart';
 import '../widgets/display_mode_selector.dart';
-import '../widgets/gesture_handler.dart';
-import '../widgets/gesture_settings_dialog.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
 import '../models/reading_settings.dart';
-import '../models/gesture_settings.dart';
 import '../models/table_of_contents.dart';
 import '../models/search_result.dart';
 import '../models/reading_position.dart';
@@ -37,7 +35,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
   bool _isSearchVisible = false;
   List<Bookmark> _bookmarks = [];
   bool _isLoadingPosition = false;
-  GestureSettings _gestureSettings = GestureSettings.defaultSettings;
+  bool _isAppBarVisible = true;
+  Timer? _autoHideTimer;
+  Timer? _scrollDebounce;
 
   @override
   void initState() {
@@ -61,6 +61,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _autoHideTimer?.cancel();
+    _scrollDebounce?.cancel();
     super.dispose();
   }
 
@@ -124,9 +126,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   void _onScroll() {
     // Debounce scroll position saving
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    _scrollDebounce?.cancel();
+    _scrollDebounce = Timer(const Duration(milliseconds: 1000), () {
       _saveReadingPosition();
     });
+    
+    // Trigger auto-hide behavior on scroll (which is a clear user interaction)
+    final themeProvider = context.read<ThemeProvider>();
+    final readingSettings = themeProvider.readingSettings;
+    if (readingSettings.autoHideControls) {
+      _handleUserInteraction(readingSettings);
+    }
   }
 
   Future<void> _loadReadingPosition() async {
@@ -308,9 +318,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DocumentProvider>(
-      builder: (context, documentProvider, _) {
-        if (!documentProvider.hasDocument) {
+    return Selector<DocumentProvider, bool>(
+      selector: (_, provider) => provider.hasDocument,
+      builder: (context, hasDocument, _) {
+        if (!hasDocument) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -321,10 +332,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
           return const SizedBox.shrink();
         }
 
+        final documentProvider = context.read<DocumentProvider>();
         final document = documentProvider.currentDocument!;
+        
+        return Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            final readingSettings = themeProvider.readingSettings;
 
         return Scaffold(
-          drawer: _tocItems.isNotEmpty 
+          drawer: (_tocItems.isNotEmpty && readingSettings.showTableOfContents)
               ? Drawer(
                   child: TableOfContentsWidget(
                     tocItems: _tocItems,
@@ -333,7 +349,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
                 )
               : null,
-          appBar: AppBar(
+          appBar: (_shouldShowAppBar(readingSettings) && _isAppBarVisible) ? AppBar(
             title: Text(
               document.fileName,
               overflow: TextOverflow.ellipsis,
@@ -393,11 +409,15 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
                 tooltip: _isSearchVisible ? 'Close search' : 'Search in document',
               ),
-              if (_tocItems.isNotEmpty)
-                IconButton(
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  icon: const Icon(Icons.list_alt),
-                  tooltip: 'Table of contents',
+              if (_tocItems.isNotEmpty && readingSettings.showTableOfContents)
+                Builder(
+                  builder: (BuildContext context) {
+                    return IconButton(
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      icon: const Icon(Icons.list_alt),
+                      tooltip: 'Table of contents',
+                    );
+                  },
                 ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
@@ -412,9 +432,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       break;
                     case 'reading_settings':
                       _showReadingSettingsDialog(context);
-                      break;
-                    case 'gesture_settings':
-                      _showGestureSettingsDialog(context);
                       break;
                   }
                 },
@@ -440,63 +457,64 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       title: Text('Reading Settings'),
                     ),
                   ),
-                  const PopupMenuItem(
-                    value: 'gesture_settings',
-                    child: ListTile(
-                      leading: Icon(Icons.gesture),
-                      title: Text('Gestures & Shortcuts'),
-                    ),
-                  ),
                 ],
               ),
             ],
-          ),
-          body: GestureHandler(
-            onGestureAction: _handleGestureAction,
-            gestureSettings: _gestureSettings,
-            scrollController: _scrollController,
-            child: Column(
-              children: [
-                if (_isSearchVisible)
-                  SearchWidget(
-                    documentContent: document.content,
-                    onResultTapped: _onSearchResultTapped,
-                    onClose: _closeSearch,
-                  ),
-                Expanded(
-                  child: StreamingMarkdownViewer(
-                    markdownContent: document.content,
-                    scrollController: _scrollController,
-                  ),
+          ) : null,
+          body: Column(
+            children: [
+              if (_isSearchVisible && _shouldShowSearch(readingSettings))
+                SearchWidget(
+                  documentContent: document.content,
+                  onResultTapped: _onSearchResultTapped,
+                  onClose: _closeSearch,
                 ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.all(AppConstants.contentPadding),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
-                ),
-              ),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _openNewFile(context),
-                      icon: const Icon(Icons.folder_open),
-                      label: const Text('Open New File'),
+              Expanded(
+                child: Padding(
+                  padding: readingSettings.contentPadding,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaleFactor: MediaQuery.of(context).textScaleFactor * readingSettings.textScaleFactor,
+                    ),
+                    child: StreamingMarkdownViewer(
+                      markdownContent: document.content,
+                      scrollController: _scrollController,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
+          floatingActionButton: _buildFloatingActionButton(readingSettings),
+          bottomNavigationBar: _shouldShowBottomBar(readingSettings) 
+              ? Container(
+                  padding: const EdgeInsets.all(AppConstants.contentPadding),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    border: Border(
+                      top: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _openNewFile(context),
+                            icon: const Icon(Icons.folder_open),
+                            label: const Text('Open New File'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : null,
+        );
+          },
         );
       },
     );
@@ -573,6 +591,108 @@ class _ReaderScreenState extends State<ReaderScreen> {
       builder: (context) => const SettingsDialog(),
     );
   }
+
+  void _showReadingSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const ReadingSettingsDialog(),
+    );
+  }
+
+
+  // Helper methods to determine UI visibility based on display mode
+  bool _shouldShowAppBar(ReadingSettings settings) {
+    // Always allow app bar to be shown initially
+    // The auto-hide logic will handle hiding it when appropriate
+    return true;
+  }
+
+  bool _shouldShowBottomBar(ReadingSettings settings) {
+    switch (settings.displayMode) {
+      case DisplayMode.normal:
+        return true;
+      case DisplayMode.focusMode:
+        return false; // Hide bottom bar in focus mode
+      case DisplayMode.presentationMode:
+        return false; // Hide for presentations
+      case DisplayMode.immersive:
+        return false; // Hide for immersive reading
+      case DisplayMode.distractionFree:
+        return false; // Hide for distraction-free reading
+    }
+  }
+
+  bool _shouldShowSearch(ReadingSettings settings) {
+    switch (settings.displayMode) {
+      case DisplayMode.normal:
+        return true;
+      case DisplayMode.focusMode:
+        return true; // Allow search in focus mode
+      case DisplayMode.presentationMode:
+        return false; // Hide search in presentation mode
+      case DisplayMode.immersive:
+        return true; // Allow search but minimal UI
+      case DisplayMode.distractionFree:
+        return false; // No search in distraction-free mode
+    }
+  }
+
+  void _handleUserInteraction(ReadingSettings settings) {
+    // Only handle auto-hide if the user has actually interacted
+    // and the app bar is currently visible (to avoid triggering on first load)
+    if (settings.autoHideControls && _isAppBarVisible) {
+      _startAutoHideTimer(settings);
+    }
+    
+    // Show UI temporarily on interaction if it was hidden
+    if (settings.autoHideControls && !_isAppBarVisible) {
+      setState(() {
+        _isAppBarVisible = true;
+      });
+      _startAutoHideTimer(settings);
+    }
+  }
+
+  void _startAutoHideTimer(ReadingSettings settings) {
+    _autoHideTimer?.cancel();
+    
+    if (settings.autoHideControls) {
+      _autoHideTimer = Timer(settings.autoHideDelay, () {
+        if (mounted) {
+          setState(() {
+            _isAppBarVisible = false;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Don't automatically start auto-hide timer when the widget is built
+    // Auto-hide should only be triggered by user interaction
+  }
+
+  Widget? _buildFloatingActionButton(ReadingSettings settings) {
+    // Show FAB when app bar is hidden and auto-hide is enabled
+    if (settings.autoHideControls && !_isAppBarVisible) {
+      return FloatingActionButton(
+        mini: true,
+        onPressed: () {
+          // Show the app bar temporarily
+          setState(() {
+            _isAppBarVisible = true;
+          });
+          // Don't start the auto-hide timer immediately
+        },
+        child: const Icon(Icons.menu),
+        tooltip: 'Show menu',
+      );
+    }
+    return null;
+  }
 }
 
 class SettingsDialog extends StatelessWidget {
@@ -582,11 +702,14 @@ class SettingsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text(AppStrings.settingsTitle),
-      content: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      content: SizedBox(
+        width: 400,
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
               ListTile(
                 title: const Text(AppStrings.themeLabel),
                 trailing: DropdownButton<AppThemeMode>(
@@ -634,9 +757,11 @@ class SettingsDialog extends StatelessWidget {
                 isHorizontal: true,
               ),
               const SizedBox(height: 8),
-            ],
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
       actions: [
         TextButton(
@@ -655,58 +780,6 @@ class SettingsDialog extends StatelessWidget {
         return 'Dark';
       case AppThemeMode.system:
         return 'System';
-    }
-  }
-
-  void _showReadingSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const ReadingSettingsDialog(),
-    );
-  }
-
-  void _showGestureSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => GestureSettingsDialog(
-        initialSettings: _gestureSettings,
-        onSettingsChanged: (settings) {
-          setState(() {
-            _gestureSettings = settings;
-          });
-        },
-      ),
-    );
-  }
-
-  void _handleGestureAction(GestureAction action) {
-    final handler = GestureActionHandler(context, scrollController: _scrollController);
-    
-    switch (action) {
-      case GestureAction.openSearch:
-        if (!_isSearchVisible) _toggleSearch();
-        break;
-      case GestureAction.closeSearch:
-        if (_isSearchVisible) _toggleSearch();
-        break;
-      case GestureAction.openTableOfContents:
-        if (_tocItems.isNotEmpty) {
-          Scaffold.of(context).openDrawer();
-        }
-        break;
-      case GestureAction.addBookmark:
-        _addBookmark();
-        break;
-      case GestureAction.openSettings:
-        _showSettingsDialog(context);
-        break;
-      case GestureAction.openFile:
-        _openNewFile(context);
-        break;
-      default:
-        // Handle other actions through the common handler
-        handler.handleAction(action);
-        break;
     }
   }
 }

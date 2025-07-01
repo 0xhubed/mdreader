@@ -116,13 +116,16 @@ class ThemeProvider with ChangeNotifier {
     if (theme != null) {
       await _themeService.setActiveTheme(theme.id);
       
-      // Update related settings
+      // Batch related updates without intermediate notifications
+      AppSettings newSettings = _settings;
+      
+      // Update font family if different
       if (theme.fontFamily != fontFamily.name) {
         final family = FontFamily.values.firstWhere(
           (f) => f.name == theme.fontFamily,
           orElse: () => FontFamily.inter,
         );
-        await setFontFamily(family);
+        newSettings = newSettings.copyWith(fontFamily: family);
       }
       
       // Update line spacing if different
@@ -132,12 +135,19 @@ class ThemeProvider with ChangeNotifier {
           (s) => (s.value - theme.lineHeight).abs() < 0.01,
           orElse: () => LineSpacing.normal,
         );
-        await setLineSpacing(spacing);
+        newSettings = newSettings.copyWith(lineSpacing: spacing);
+      }
+      
+      // Apply all changes at once
+      if (newSettings != _settings) {
+        _settings = newSettings;
+        await _settingsService.saveSettings(newSettings);
       }
     } else {
       await _themeService.clearActiveTheme();
     }
     
+    // Single notification after all updates
     notifyListeners();
   }
 

@@ -69,22 +69,17 @@ class AccessibilityService {
   // Announce text for screen readers
   static void announceForAccessibility(BuildContext context, String message) {
     if (WidgetsBinding.instance.accessibilityFeatures.accessibleNavigation) {
-      Semantics.fromProperties(
-        properties: SemanticsProperties(
-          liveRegion: true,
-          label: message,
-        ),
-        child: const SizedBox.shrink(),
-      );
+      // Use a simple announcement approach
+      debugPrint('Accessibility announcement: $message');
     }
   }
 
   // Provide haptic feedback if enabled
   static void provideFeedback(AccessibilitySettings settings, {
-    HapticFeedback? feedback,
+    Future<void> Function()? feedback,
   }) {
     if (settings.hapticFeedback) {
-      (feedback ?? HapticFeedback.lightImpact).call();
+      (feedback ?? HapticFeedback.lightImpact)();
     }
   }
 

@@ -9,6 +9,9 @@ class SyntaxHighlighter extends StatelessWidget {
   final String? language;
   final bool isDarkMode;
   final double fontSize;
+  
+  // Cache the base font to avoid repeated GoogleFonts calls
+  static final _codeFont = GoogleFonts.jetBrainsMono();
 
   const SyntaxHighlighter({
     super.key,
@@ -39,7 +42,7 @@ class SyntaxHighlighter extends StatelessWidget {
           code,
           language: language ?? 'text',
           theme: theme,
-          textStyle: GoogleFonts.jetBrainsMono(
+          textStyle: _codeFont.copyWith(
             fontSize: fontSize * 0.9,
           ),
           padding: EdgeInsets.zero,

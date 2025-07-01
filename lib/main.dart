@@ -44,11 +44,14 @@ class _AppViewState extends State<AppView> {
   void initState() {
     super.initState();
     
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ThemeProvider>().initialize();
-      context.read<RecentFilesProvider>().loadRecentFiles();
-      context.read<ReadingPositionProvider>().loadBookmarks();
-      context.read<AccessibilityProvider>().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Parallelize initialization for better performance
+      await Future.wait([
+        context.read<ThemeProvider>().initialize(),
+        context.read<RecentFilesProvider>().loadRecentFiles(),
+        context.read<ReadingPositionProvider>().loadBookmarks(),
+        context.read<AccessibilityProvider>().initialize(),
+      ]);
     });
   }
 

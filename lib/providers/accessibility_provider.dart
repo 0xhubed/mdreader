@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ class AccessibilityProvider with ChangeNotifier {
   late AccessibilityService _accessibilityService;
   AccessibilitySettings _settings = AccessibilitySettings.defaultSettings;
   bool _isLoading = true;
+  Timer? _saveDebouncer;
 
   AccessibilitySettings get settings => _settings;
   bool get isLoading => _isLoading;
@@ -52,12 +54,18 @@ class AccessibilityProvider with ChangeNotifier {
     _settings = newSettings;
     notifyListeners();
     
-    try {
-      await _accessibilityService.saveSettings(newSettings);
-      AccessibilityService.applySystemAccessibility(newSettings);
-    } catch (e) {
-      debugPrint('Failed to save accessibility settings: $e');
-    }
+    // Apply system accessibility immediately
+    AccessibilityService.applySystemAccessibility(newSettings);
+    
+    // Debounce the save to SharedPreferences
+    _saveDebouncer?.cancel();
+    _saveDebouncer = Timer(const Duration(milliseconds: 500), () async {
+      try {
+        await _accessibilityService.saveSettings(newSettings);
+      } catch (e) {
+        debugPrint('Failed to save accessibility settings: $e');
+      }
+    });
   }
 
   // Individual setters for convenience
@@ -147,7 +155,7 @@ class AccessibilityProvider with ChangeNotifier {
   }
 
   // Provide haptic feedback if enabled
-  void provideFeedback([HapticFeedback? feedback]) {
+  void provideFeedback([Future<void> Function()? feedback]) {
     if (_settings.hapticFeedback) {
       (feedback ?? HapticFeedback.lightImpact)();
     }
@@ -168,4 +176,10 @@ class AccessibilityProvider with ChangeNotifier {
 
   // Get accessibility summary for display
   String get accessibilitySummary => _settings.activeFeatures;
+  
+  @override
+  void dispose() {
+    _saveDebouncer?.cancel();
+    super.dispose();
+  }
 }
