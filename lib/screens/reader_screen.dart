@@ -5,11 +5,9 @@ import '../providers/document_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/recent_files_provider.dart';
 import '../providers/reading_position_provider.dart';
-import '../widgets/markdown_viewer.dart';
 import '../widgets/streaming_markdown_viewer.dart';
 import '../widgets/table_of_contents_widget.dart';
 import '../widgets/search_widget.dart';
-import '../widgets/reading_mode_selector.dart';
 import '../widgets/display_mode_selector.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
@@ -33,8 +31,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   List<TocItem> _tocItems = [];
   TocItem? _currentTocItem;
   bool _isSearchVisible = false;
-  List<Bookmark> _bookmarks = [];
-  bool _isLoadingPosition = false;
   bool _isAppBarVisible = true;
   Timer? _autoHideTimer;
   Timer? _scrollDebounce;
@@ -53,7 +49,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
         recentFilesProvider.addRecentFile(documentProvider.currentDocument!.filePath);
         _generateTableOfContents(documentProvider.currentDocument!.content);
         _loadReadingPosition();
-        _loadBookmarks();
       }
     });
   }
@@ -143,9 +138,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
     final documentProvider = context.read<DocumentProvider>();
     if (!documentProvider.hasDocument) return;
 
-    setState(() {
-      _isLoadingPosition = true;
-    });
 
     final positionProvider = context.read<ReadingPositionProvider>();
     final position = await positionProvider.getReadingPosition(
@@ -167,9 +159,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
       });
     }
 
-    setState(() {
-      _isLoadingPosition = false;
-    });
   }
 
   Future<void> _saveReadingPosition() async {
@@ -196,125 +185,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     await positionProvider.saveReadingPosition(readingPosition);
   }
 
-  Future<void> _loadBookmarks() async {
-    final documentProvider = context.read<DocumentProvider>();
-    if (!documentProvider.hasDocument) return;
 
-    final positionProvider = context.read<ReadingPositionProvider>();
-    final bookmarks = positionProvider.getBookmarksForFile(
-      documentProvider.currentDocument!.filePath,
-    );
 
-    setState(() {
-      _bookmarks = bookmarks;
-    });
-  }
 
-  Future<void> _addBookmark() async {
-    final documentProvider = context.read<DocumentProvider>();
-    if (!documentProvider.hasDocument || !_scrollController.hasClients) return;
-
-    final positionProvider = context.read<ReadingPositionProvider>();
-    final maxScrollExtent = _scrollController.position.maxScrollExtent;
-    final currentOffset = _scrollController.offset;
-
-    final scrollPosition = positionProvider.calculateScrollPosition(
-      documentProvider.currentDocument!.content,
-      currentOffset,
-      maxScrollExtent,
-    );
-
-    // Show dialog to get bookmark title and note
-    await _showAddBookmarkDialog(scrollPosition);
-  }
-
-  Future<void> _showAddBookmarkDialog(double position) async {
-    final titleController = TextEditingController();
-    final noteController = TextEditingController();
-    
-    // Set default title based on current section
-    if (_currentTocItem != null) {
-      titleController.text = 'At "${_currentTocItem!.title}"';
-    } else {
-      titleController.text = 'Bookmark at ${(position * 100).toStringAsFixed(1)}%';
-    }
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Bookmark'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'Enter bookmark title',
-                ),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (optional)',
-                  hintText: 'Add a note for this bookmark',
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == true && titleController.text.isNotEmpty) {
-      final documentProvider = context.read<DocumentProvider>();
-      final bookmark = Bookmark(
-        filePath: documentProvider.currentDocument!.filePath,
-        position: position,
-        title: titleController.text,
-        note: noteController.text.isEmpty ? null : noteController.text,
-        section: _currentTocItem?.title,
-      );
-
-      final positionProvider = context.read<ReadingPositionProvider>();
-      await positionProvider.addBookmark(bookmark);
-      await _loadBookmarks();
-    }
-
-    titleController.dispose();
-    noteController.dispose();
-  }
-
-  void _jumpToBookmark(Bookmark bookmark) {
-    if (!_scrollController.hasClients) return;
-
-    final positionProvider = context.read<ReadingPositionProvider>();
-    final maxScrollExtent = _scrollController.position.maxScrollExtent;
-    final targetOffset = positionProvider.calculateScrollOffset(
-      bookmark.position,
-      maxScrollExtent,
-    );
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,50 +233,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
               tooltip: 'Back to home',
             ),
             actions: [
-              IconButton(
-                onPressed: _addBookmark,
-                icon: const Icon(Icons.bookmark_add),
-                tooltip: 'Add bookmark',
-              ),
-              if (_bookmarks.isNotEmpty)
-                PopupMenuButton<Bookmark>(
-                  onSelected: _jumpToBookmark,
-                  icon: const Icon(Icons.bookmarks),
-                  tooltip: 'Bookmarks',
-                  itemBuilder: (context) => _bookmarks.map((bookmark) {
-                    return PopupMenuItem<Bookmark>(
-                      value: bookmark,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            bookmark.title,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (bookmark.note != null)
-                            Text(
-                              bookmark.note!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          Text(
-                            bookmark.displayDescription,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              const ReadingModeQuickToggle(),
-              const DisplayModeQuickToggle(),
               IconButton(
                 onPressed: _toggleSearch,
                 icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
@@ -595,7 +424,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   void _showReadingSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const ReadingSettingsDialog(),
+      builder: (context) => ReadingSettingsDialog(),
     );
   }
 
@@ -608,33 +437,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   bool _shouldShowBottomBar(ReadingSettings settings) {
-    switch (settings.displayMode) {
-      case DisplayMode.normal:
-        return true;
-      case DisplayMode.focusMode:
-        return false; // Hide bottom bar in focus mode
-      case DisplayMode.presentationMode:
-        return false; // Hide for presentations
-      case DisplayMode.immersive:
-        return false; // Hide for immersive reading
-      case DisplayMode.distractionFree:
-        return false; // Hide for distraction-free reading
-    }
+    return true; // Always show bottom bar in normal mode
   }
 
   bool _shouldShowSearch(ReadingSettings settings) {
-    switch (settings.displayMode) {
-      case DisplayMode.normal:
-        return true;
-      case DisplayMode.focusMode:
-        return true; // Allow search in focus mode
-      case DisplayMode.presentationMode:
-        return false; // Hide search in presentation mode
-      case DisplayMode.immersive:
-        return true; // Allow search but minimal UI
-      case DisplayMode.distractionFree:
-        return false; // No search in distraction-free mode
-    }
+    return true; // Always allow search in normal mode
   }
 
   void _handleUserInteraction(ReadingSettings settings) {
@@ -744,19 +551,6 @@ class SettingsDialog extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.all(8),
-                child: Text(
-                  'Reading Mode',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const ReadingModeSelector(
-                showLabels: false,
-                isHorizontal: true,
-              ),
-              const SizedBox(height: 8),
                 ],
               ),
             );

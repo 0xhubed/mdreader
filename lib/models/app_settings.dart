@@ -23,7 +23,6 @@ enum FontFamily {
 
 enum ReadingMode {
   normal,
-  sepia,
   highContrast,
 }
 
@@ -193,8 +192,6 @@ extension ReadingModeExtension on ReadingMode {
     switch (this) {
       case ReadingMode.normal:
         return 'Normal';
-      case ReadingMode.sepia:
-        return 'Sepia';
       case ReadingMode.highContrast:
         return 'High Contrast';
     }

@@ -140,8 +140,6 @@ class ReadingModeSelector extends StatelessWidget {
     switch (mode) {
       case ReadingMode.normal:
         return 'Default theme colors';
-      case ReadingMode.sepia:
-        return 'Warm, paper-like reading';
       case ReadingMode.highContrast:
         return 'Maximum readability';
     }
@@ -153,11 +151,6 @@ class ReadingModeSelector extends StatelessWidget {
         return ReadingModeColors(
           backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
           textColor: isDarkMode ? Colors.white : Colors.black87,
-        );
-      case ReadingMode.sepia:
-        return const ReadingModeColors(
-          backgroundColor: Color(0xFFF4F1EA),
-          textColor: Color(0xFF5D4037),
         );
       case ReadingMode.highContrast:
         return ReadingModeColors(
@@ -217,8 +210,6 @@ class ReadingModeQuickToggle extends StatelessWidget {
     switch (mode) {
       case ReadingMode.normal:
         return const Icon(Icons.auto_awesome);
-      case ReadingMode.sepia:
-        return const Icon(Icons.wb_sunny);
       case ReadingMode.highContrast:
         return const Icon(Icons.contrast);
     }

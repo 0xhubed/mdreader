@@ -7,7 +7,6 @@ import '../utils/constants.dart';
 import '../models/app_settings.dart';
 import '../widgets/recent_files_widget.dart';
 import '../widgets/theme_gallery.dart';
-import '../widgets/reading_mode_selector.dart';
 import '../widgets/accessibility_settings_dialog.dart';
 import 'reader_screen.dart';
 
@@ -262,19 +261,6 @@ class SettingsDialog extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Reading Mode',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const ReadingModeSelector(
-                showLabels: false,
-                isHorizontal: true,
-              ),
-              const SizedBox(height: 8),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.palette),

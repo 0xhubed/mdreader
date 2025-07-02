@@ -1,24 +1,12 @@
 import 'package:flutter/material.dart';
 
 enum DisplayMode {
-  normal,
-  focusMode,
-  presentationMode,
-  immersive,
-  distractionFree;
+  normal;
 
   String get displayName {
     switch (this) {
       case DisplayMode.normal:
         return 'Normal';
-      case DisplayMode.focusMode:
-        return 'Focus Mode';
-      case DisplayMode.presentationMode:
-        return 'Presentation';
-      case DisplayMode.immersive:
-        return 'Immersive';
-      case DisplayMode.distractionFree:
-        return 'Distraction Free';
     }
   }
 
@@ -26,14 +14,6 @@ enum DisplayMode {
     switch (this) {
       case DisplayMode.normal:
         return 'Standard reading view with all UI elements';
-      case DisplayMode.focusMode:
-        return 'Minimal UI with focus on content';
-      case DisplayMode.presentationMode:
-        return 'Large text for presentations';
-      case DisplayMode.immersive:
-        return 'Full-screen reading experience';
-      case DisplayMode.distractionFree:
-        return 'Only content, no UI elements';
     }
   }
 
@@ -41,14 +21,6 @@ enum DisplayMode {
     switch (this) {
       case DisplayMode.normal:
         return Icons.view_comfortable;
-      case DisplayMode.focusMode:
-        return Icons.center_focus_strong;
-      case DisplayMode.presentationMode:
-        return Icons.present_to_all;
-      case DisplayMode.immersive:
-        return Icons.fullscreen;
-      case DisplayMode.distractionFree:
-        return Icons.visibility_off;
     }
   }
 }
@@ -101,50 +73,6 @@ class ReadingSettings {
     switch (mode) {
       case DisplayMode.normal:
         return const ReadingSettings();
-      
-      case DisplayMode.focusMode:
-        return const ReadingSettings(
-          displayMode: DisplayMode.focusMode,
-          showScrollbar: false,
-          showProgress: true,
-          showTableOfContents: false,
-          autoHideControls: true,
-          autoHideDelay: Duration(seconds: 2),
-          contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        );
-      
-      case DisplayMode.presentationMode:
-        return const ReadingSettings(
-          displayMode: DisplayMode.presentationMode,
-          showScrollbar: false,
-          showProgress: false,
-          showTableOfContents: false,
-          autoHideControls: true,
-          autoHideDelay: Duration(seconds: 1),
-          textScaleFactor: 1.5,
-          contentPadding: EdgeInsets.all(32),
-        );
-      
-      case DisplayMode.immersive:
-        return const ReadingSettings(
-          displayMode: DisplayMode.immersive,
-          showScrollbar: false,
-          showProgress: false,
-          showTableOfContents: false,
-          autoHideControls: true,
-          autoHideDelay: Duration(seconds: 3),
-          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        );
-      
-      case DisplayMode.distractionFree:
-        return const ReadingSettings(
-          displayMode: DisplayMode.distractionFree,
-          showScrollbar: false,
-          showProgress: false,
-          showTableOfContents: false,
-          autoHideControls: false,
-          contentPadding: EdgeInsets.all(20),
-        );
     }
   }
 

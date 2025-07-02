@@ -209,15 +209,16 @@ class ThemeProvider with ChangeNotifier {
       : ThemeData.light(useMaterial3: true);
   }
 
-  // Display mode methods
+  // Display mode methods (simplified for normal mode only)
   Future<void> setDisplayMode(DisplayMode mode) async {
-    _readingSettings = ReadingSettings.forDisplayMode(mode);
+    // Only normal mode is supported
+    _readingSettings = const ReadingSettings();
     notifyListeners();
     
     // Save to preferences
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('display_mode', mode.index);
+      await prefs.setInt('display_mode', 0); // Always normal mode
     } catch (e) {
       debugPrint('Failed to save display mode: $e');
     }
@@ -239,11 +240,8 @@ class ThemeProvider with ChangeNotifier {
   Future<void> _loadReadingSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final displayModeIndex = prefs.getInt('display_mode');
-      
-      if (displayModeIndex != null && displayModeIndex < DisplayMode.values.length) {
-        _readingSettings = ReadingSettings.forDisplayMode(DisplayMode.values[displayModeIndex]);
-      }
+      // Always use normal mode settings
+      _readingSettings = const ReadingSettings();
     } catch (e) {
       debugPrint('Failed to load reading settings: $e');
     }

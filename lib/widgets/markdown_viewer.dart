@@ -228,12 +228,6 @@ class MarkdownViewer extends StatelessWidget {
           textColor: theme.textTheme.bodyLarge?.color ?? Colors.black,
           surfaceColor: theme.cardColor,
         );
-      case ReadingMode.sepia:
-        return ReadingModeColors(
-          backgroundColor: const Color(0xFFF4F1EA),
-          textColor: const Color(0xFF5D4037),
-          surfaceColor: const Color(0xFFEDEAE0),
-        );
       case ReadingMode.highContrast:
         return ReadingModeColors(
           backgroundColor: isDark ? Colors.black : Colors.white,

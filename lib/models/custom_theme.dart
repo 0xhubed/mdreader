@@ -246,38 +246,6 @@ class ThemePresets {
     isBuiltIn: true,
   );
 
-  static CustomTheme get sepia => CustomTheme(
-    id: 'sepia',
-    name: 'Sepia',
-    description: 'Warm and comfortable reading theme',
-    isDark: false,
-    colors: {
-      CustomTheme.primaryColorKey: const Color(0xFF8D6E63),
-      CustomTheme.secondaryColorKey: const Color(0xFF6D4C41),
-      CustomTheme.backgroundColorKey: const Color(0xFFF4F1EA),
-      CustomTheme.surfaceColorKey: const Color(0xFFFAF8F3),
-      CustomTheme.errorColorKey: const Color(0xFFBF360C),
-      CustomTheme.onPrimaryColorKey: const Color(0xFFFFFFFF),
-      CustomTheme.onSecondaryColorKey: const Color(0xFFFFFFFF),
-      CustomTheme.onBackgroundColorKey: const Color(0xFF5D4037),
-      CustomTheme.onSurfaceColorKey: const Color(0xFF5D4037),
-      CustomTheme.onErrorColorKey: const Color(0xFFFFFFFF),
-      CustomTheme.textPrimaryColorKey: const Color(0xFF5D4037),
-      CustomTheme.textSecondaryColorKey: const Color(0xFF795548),
-      CustomTheme.dividerColorKey: const Color(0xFFD7CCC8),
-      CustomTheme.shadowColorKey: const Color(0x1F5D4037),
-      CustomTheme.codeBackgroundColorKey: const Color(0xFFEFEBE9),
-      CustomTheme.codeTextColorKey: const Color(0xFF4E342E),
-      CustomTheme.linkColorKey: const Color(0xFF6D4C41),
-      CustomTheme.selectionColorKey: const Color(0x3D8D6E63),
-    },
-    textScales: CustomTheme.defaultTextScales(),
-    fontFamily: 'Merriweather',
-    fontSize: 16.0,
-    lineHeight: 1.6,
-    createdAt: DateTime.now(),
-    isBuiltIn: true,
-  );
 
   static CustomTheme get highContrast => CustomTheme(
     id: 'high_contrast',
@@ -381,7 +349,6 @@ class ThemePresets {
   static List<CustomTheme> get all => [
     defaultLight,
     defaultDark,
-    sepia,
     highContrast,
     midnight,
     forest,
