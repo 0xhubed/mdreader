@@ -43,12 +43,22 @@ class ThemeProvider with ChangeNotifier {
       final activeThemeId = await _themeService.getActiveThemeId();
       if (activeThemeId != null) {
         _activeCustomTheme = await _themeService.getThemeById(activeThemeId);
+      } else {
+        // Set "Default Light" as the default theme on first run
+        _activeCustomTheme = _availableThemes.firstWhere(
+          (theme) => theme.id == 'default_light',
+          orElse: () => ThemePresets.defaultLight,
+        );
+        // Save it as the active theme
+        await _themeService.setActiveTheme(_activeCustomTheme!.id);
       }
       
       await _loadReadingSettings();
     } catch (e) {
       _settings = const AppSettings();
       _availableThemes = ThemePresets.all;
+      // Set Default Light as fallback theme even on error
+      _activeCustomTheme = ThemePresets.defaultLight;
     }
     
     _isLoading = false;

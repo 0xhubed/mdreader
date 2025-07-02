@@ -20,17 +20,6 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(AppStrings.appName),
         actions: [
-          Consumer<ThemeProvider>(
-            builder: (context, themeProvider, _) {
-              return IconButton(
-                onPressed: themeProvider.toggleTheme,
-                icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                ),
-                tooltip: 'Toggle theme',
-              );
-            },
-          ),
           IconButton(
             onPressed: () => _showSettingsDialog(context),
             icon: const Icon(Icons.settings),
