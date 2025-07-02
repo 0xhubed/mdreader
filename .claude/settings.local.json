@@ -23,7 +23,9 @@
       "Bash(git commit:*)",
       "Bash(find:*)",
       "Bash(mv:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(git push:*)",
+      "Bash(npm init:*)"
     ],
     "deny": []
   }

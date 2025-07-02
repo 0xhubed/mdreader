@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDReader - Privacy-First Markdown Reader</title>
+    <meta name="description" content="A privacy-first, offline Markdown reader for Android. Zero data collection, beautiful typography, and exceptional reading experience.">
+    <link rel="icon" type="image/png" href="app_icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #000000;
+            background: #ffffff;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        header {
+            background: #000000;
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.03"><circle cx="30" cy="30" r="2"/></g></svg>') repeat;
+        }
+        
+        .hero {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            background: white;
+            padding: 8px;
+        }
+        
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .hero .tagline {
+            font-size: 1.5rem;
+            opacity: 0.95;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #ffffff;
+        }
+        
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            color: #000000;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: 2px solid #ffffff;
+        }
+        
+        .download-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .features {
+            padding: 100px 0;
+            background: #f8f8f8;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: #000000;
+            font-weight: 700;
+        }
+        
+        .features-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666666;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #000000;
+        }
+        
+        .feature:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: #000000;
+        }
+        
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        .feature p {
+            color: #666666;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        .about {
+            padding: 100px 0;
+            background: white;
+        }
+        
+        .about h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: #000000;
+            font-weight: 700;
+        }
+        
+        .about-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666666;
+            margin-bottom: 60px;
+        }
+        
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #333333;
+            line-height: 1.8;
+        }
+        
+        .about-content p {
+            margin-bottom: 24px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666666;
+            font-size: 1rem;
+        }
+        
+        footer {
+            background: #000000;
+            color: white;
+            padding: 60px 0 40px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links a {
+            color: #cccccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #333333;
+            padding-top: 30px;
+            text-align: center;
+            color: #cccccc;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2rem;
+            }
+            
+            .features h2, .about h2 {
+                font-size: 2rem;
+            }
+            
+            .features, .about {
+                padding: 60px 0;
+            }
+            
+            .app-icon {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <div class="app-icon">
+                    <img src="app_icon.png" alt="MDReader App Icon">
+                </div>
+                <h1>MDReader</h1>
+                <div class="tagline">Privacy-First Markdown Reader</div>
+                <div class="subtitle">Zero data collection, beautiful typography, exceptional reading experience for your markdown files</div>
+                <a href="#" class="download-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                    </svg>
+                    Download from Google Play
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <h2>Why Choose MDReader?</h2>
+            <div class="features-subtitle">Experience markdown reading like never before with these powerful features</div>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Privacy by Design</h3>
+                    <p>Zero data collection, no internet access required. Your files stay on your device, always.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <h3>Beautiful Typography</h3>
+                    <p>Optimized reading experience with Google Fonts, adjustable sizes, and perfect line spacing.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🌙</div>
+                    <h3>Smart Themes</h3>
+                    <p>Light and dark modes with system detection, plus custom theme creation for your style.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📂</div>
+                    <h3>Universal Support</h3>
+                    <p>Open .md, .markdown, and .txt files with full CommonMark syntax support.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Instant file loading with smooth scrolling and responsive performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about">
+        <div class="container">
+            <h2>Built for Privacy & Performance</h2>
+            <div class="about-subtitle">The markdown reader that respects your data and delivers excellence</div>
+            <div class="about-content">
+                <p>MDReader is crafted for people who value their privacy and demand a superior reading experience. Whether you're reviewing documentation, reading notes, or enjoying any markdown content, MDReader delivers beautiful typography without compromising your personal data.</p>
+                <p>Perfect for developers, writers, students, researchers, and anyone who works with markdown files regularly. Experience the difference of a truly private, offline-first application.</p>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">0%</div>
+                    <div class="stat-label">Data Collection</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Offline</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">File Size Support</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>MDReader</h4>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="mailto:0xhubed@protonmail.ch">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Download</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Google Play Store</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <ul class="footer-links">
+                        <li><a href="mailto:0xhubed@protonmail.ch">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MDReader. All rights reserved. Made with privacy in mind.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
