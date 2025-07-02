@@ -7,7 +7,6 @@ import '../utils/constants.dart';
 import '../models/app_settings.dart';
 import '../widgets/recent_files_widget.dart';
 import '../widgets/theme_gallery.dart';
-import '../widgets/accessibility_settings_dialog.dart';
 import 'reader_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -273,19 +272,6 @@ class SettingsDialog extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => const ThemeGallery(),
                     ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.accessibility),
-                title: const Text('Accessibility'),
-                subtitle: const Text('Screen reader, contrast, and motor settings'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  showDialog(
-                    context: context,
-                    builder: (context) => const AccessibilitySettingsDialog(),
                   );
                 },
               ),

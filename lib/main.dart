@@ -4,7 +4,6 @@ import 'providers/document_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/recent_files_provider.dart';
 import 'providers/reading_position_provider.dart';
-import 'providers/accessibility_provider.dart';
 import 'screens/home_screen.dart';
 import 'utils/theme_data.dart';
 import 'utils/constants.dart';
@@ -25,7 +24,6 @@ class MDReaderApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => RecentFilesProvider()),
         ChangeNotifierProvider(create: (_) => ReadingPositionProvider()),
-        ChangeNotifierProvider(create: (_) => AccessibilityProvider()),
       ],
       child: const AppView(),
     );
@@ -50,7 +48,6 @@ class _AppViewState extends State<AppView> {
         context.read<ThemeProvider>().initialize(),
         context.read<RecentFilesProvider>().loadRecentFiles(),
         context.read<ReadingPositionProvider>().loadBookmarks(),
-        context.read<AccessibilityProvider>().initialize(),
       ]);
     });
   }
