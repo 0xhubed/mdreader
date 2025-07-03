@@ -8,10 +8,9 @@ import '../providers/reading_position_provider.dart';
 import '../widgets/streaming_markdown_viewer.dart';
 import '../widgets/table_of_contents_widget.dart';
 import '../widgets/search_widget.dart';
-import '../widgets/display_mode_selector.dart';
+import '../widgets/theme_gallery.dart';
 import '../utils/constants.dart';
 import '../models/app_settings.dart';
-import '../models/reading_settings.dart';
 import '../models/table_of_contents.dart';
 import '../models/search_result.dart';
 import '../models/reading_position.dart';
@@ -31,8 +30,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   List<TocItem> _tocItems = [];
   TocItem? _currentTocItem;
   bool _isSearchVisible = false;
-  bool _isAppBarVisible = true;
-  Timer? _autoHideTimer;
+  final bool _isAppBarVisible = true;
   Timer? _scrollDebounce;
 
   @override
@@ -56,7 +54,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _autoHideTimer?.cancel();
     _scrollDebounce?.cancel();
     super.dispose();
   }
@@ -126,12 +123,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _saveReadingPosition();
     });
     
-    // Trigger auto-hide behavior on scroll (which is a clear user interaction)
-    final themeProvider = context.read<ThemeProvider>();
-    final readingSettings = themeProvider.readingSettings;
-    if (readingSettings.autoHideControls) {
-      _handleUserInteraction(readingSettings);
-    }
+    // Auto-hide controls is disabled
   }
 
   Future<void> _loadReadingPosition() async {
@@ -210,10 +202,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
         
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
-            final readingSettings = themeProvider.readingSettings;
 
         return Scaffold(
-          drawer: (_tocItems.isNotEmpty && readingSettings.showTableOfContents)
+          drawer: (_tocItems.isNotEmpty)
               ? Drawer(
                   child: TableOfContentsWidget(
                     tocItems: _tocItems,
@@ -222,7 +213,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   ),
                 )
               : null,
-          appBar: (_shouldShowAppBar(readingSettings) && _isAppBarVisible) ? AppBar(
+          appBar: _isAppBarVisible ? AppBar(
             title: Text(
               document.fileName,
               overflow: TextOverflow.ellipsis,
@@ -238,7 +229,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
                 tooltip: _isSearchVisible ? 'Close search' : 'Search in document',
               ),
-              if (_tocItems.isNotEmpty && readingSettings.showTableOfContents)
+              if (_tocItems.isNotEmpty)
                 Builder(
                   builder: (BuildContext context) {
                     return IconButton(
@@ -259,9 +250,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     case 'settings':
                       _showSettingsDialog(context);
                       break;
-                    case 'reading_settings':
-                      _showReadingSettingsDialog(context);
-                      break;
                   }
                 },
                 itemBuilder: (context) => [
@@ -279,20 +267,13 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       title: Text('Settings'),
                     ),
                   ),
-                  const PopupMenuItem(
-                    value: 'reading_settings',
-                    child: ListTile(
-                      leading: Icon(Icons.tune),
-                      title: Text('Reading Settings'),
-                    ),
-                  ),
                 ],
               ),
             ],
           ) : null,
           body: Column(
             children: [
-              if (_isSearchVisible && _shouldShowSearch(readingSettings))
+              if (_isSearchVisible)
                 SearchWidget(
                   documentContent: document.content,
                   onResultTapped: _onSearchResultTapped,
@@ -300,10 +281,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                 ),
               Expanded(
                 child: Padding(
-                  padding: readingSettings.contentPadding,
+                  padding: const EdgeInsets.all(16.0),
                   child: MediaQuery(
                     data: MediaQuery.of(context).copyWith(
-                      textScaleFactor: MediaQuery.of(context).textScaleFactor * readingSettings.textScaleFactor,
+                      textScaleFactor: MediaQuery.of(context).textScaleFactor,
                     ),
                     child: StreamingMarkdownViewer(
                       markdownContent: document.content,
@@ -314,9 +295,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
             ],
           ),
-          floatingActionButton: _buildFloatingActionButton(readingSettings),
-          bottomNavigationBar: _shouldShowBottomBar(readingSettings) 
-              ? Container(
+          floatingActionButton: null,
+          bottomNavigationBar: Container(
                   padding: const EdgeInsets.all(AppConstants.contentPadding),
                   decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
@@ -340,8 +320,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ],
                     ),
                   ),
-                )
-              : null,
+                ),
         );
           },
         );
@@ -421,85 +400,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
     );
   }
 
-  void _showReadingSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => ReadingSettingsDialog(),
-    );
-  }
 
 
-  // Helper methods to determine UI visibility based on display mode
-  bool _shouldShowAppBar(ReadingSettings settings) {
-    // Always allow app bar to be shown initially
-    // The auto-hide logic will handle hiding it when appropriate
-    return true;
-  }
-
-  bool _shouldShowBottomBar(ReadingSettings settings) {
-    return true; // Always show bottom bar in normal mode
-  }
-
-  bool _shouldShowSearch(ReadingSettings settings) {
-    return true; // Always allow search in normal mode
-  }
-
-  void _handleUserInteraction(ReadingSettings settings) {
-    // Only handle auto-hide if the user has actually interacted
-    // and the app bar is currently visible (to avoid triggering on first load)
-    if (settings.autoHideControls && _isAppBarVisible) {
-      _startAutoHideTimer(settings);
-    }
-    
-    // Show UI temporarily on interaction if it was hidden
-    if (settings.autoHideControls && !_isAppBarVisible) {
-      setState(() {
-        _isAppBarVisible = true;
-      });
-      _startAutoHideTimer(settings);
-    }
-  }
-
-  void _startAutoHideTimer(ReadingSettings settings) {
-    _autoHideTimer?.cancel();
-    
-    if (settings.autoHideControls) {
-      _autoHideTimer = Timer(settings.autoHideDelay, () {
-        if (mounted) {
-          setState(() {
-            _isAppBarVisible = false;
-          });
-        }
-      });
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    
-    // Don't automatically start auto-hide timer when the widget is built
-    // Auto-hide should only be triggered by user interaction
-  }
-
-  Widget? _buildFloatingActionButton(ReadingSettings settings) {
-    // Show FAB when app bar is hidden and auto-hide is enabled
-    if (settings.autoHideControls && !_isAppBarVisible) {
-      return FloatingActionButton(
-        mini: true,
-        onPressed: () {
-          // Show the app bar temporarily
-          setState(() {
-            _isAppBarVisible = true;
-          });
-          // Don't start the auto-hide timer immediately
-        },
-        child: const Icon(Icons.menu),
-        tooltip: 'Show menu',
-      );
-    }
-    return null;
-  }
 }
 
 class SettingsDialog extends StatelessWidget {
@@ -517,22 +419,20 @@ class SettingsDialog extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+              // Custom theme selector
               ListTile(
-                title: const Text(AppStrings.themeLabel),
-                trailing: DropdownButton<AppThemeMode>(
-                  value: themeProvider.themeMode,
-                  onChanged: (AppThemeMode? newValue) {
-                    if (newValue != null) {
-                      themeProvider.setThemeMode(newValue);
-                    }
-                  },
-                  items: AppThemeMode.values.map((AppThemeMode mode) {
-                    return DropdownMenuItem<AppThemeMode>(
-                      value: mode,
-                      child: Text(_getThemeModeDisplayName(mode)),
-                    );
-                  }).toList(),
-                ),
+                leading: const Icon(Icons.palette),
+                title: const Text('Theme'),
+                subtitle: Text(themeProvider.activeCustomTheme?.name ?? 'Default'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ThemeGallery(),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 title: const Text(AppStrings.fontSizeLabel),
@@ -566,14 +466,4 @@ class SettingsDialog extends StatelessWidget {
     );
   }
 
-  String _getThemeModeDisplayName(AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.light:
-        return 'Light';
-      case AppThemeMode.dark:
-        return 'Dark';
-      case AppThemeMode.system:
-        return 'System';
-    }
-  }
 }

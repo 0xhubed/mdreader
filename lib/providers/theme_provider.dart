@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import '../models/custom_theme.dart';
-import '../models/reading_settings.dart';
 import '../services/settings_service.dart';
 import '../services/theme_service.dart';
 
@@ -15,7 +14,6 @@ class ThemeProvider with ChangeNotifier {
   bool _isLoading = true;
   CustomTheme? _activeCustomTheme;
   List<CustomTheme> _availableThemes = [];
-  ReadingSettings _readingSettings = const ReadingSettings();
 
   AppSettings get settings => _settings;
   bool get isLoading => _isLoading;
@@ -26,8 +24,6 @@ class ThemeProvider with ChangeNotifier {
   LineSpacing get lineSpacing => _settings.lineSpacing;
   CustomTheme? get activeCustomTheme => _activeCustomTheme;
   List<CustomTheme> get availableThemes => _availableThemes;
-  ReadingSettings get readingSettings => _readingSettings;
-  DisplayMode get displayMode => _readingSettings.displayMode;
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -53,7 +49,6 @@ class ThemeProvider with ChangeNotifier {
         await _themeService.setActiveTheme(_activeCustomTheme!.id);
       }
       
-      await _loadReadingSettings();
     } catch (e) {
       _settings = const AppSettings();
       _availableThemes = ThemePresets.all;
@@ -209,41 +204,4 @@ class ThemeProvider with ChangeNotifier {
       : ThemeData.light(useMaterial3: true);
   }
 
-  // Display mode methods (simplified for normal mode only)
-  Future<void> setDisplayMode(DisplayMode mode) async {
-    // Only normal mode is supported
-    _readingSettings = const ReadingSettings();
-    notifyListeners();
-    
-    // Save to preferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('display_mode', 0); // Always normal mode
-    } catch (e) {
-      debugPrint('Failed to save display mode: $e');
-    }
-  }
-
-  Future<void> updateReadingSettings(ReadingSettings settings) async {
-    _readingSettings = settings;
-    notifyListeners();
-    
-    // Save to preferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('reading_settings', settings.toJson().toString());
-    } catch (e) {
-      debugPrint('Failed to save reading settings: $e');
-    }
-  }
-
-  Future<void> _loadReadingSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      // Always use normal mode settings
-      _readingSettings = const ReadingSettings();
-    } catch (e) {
-      debugPrint('Failed to load reading settings: $e');
-    }
-  }
 }

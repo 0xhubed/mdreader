@@ -83,7 +83,7 @@ The AAB file will be generated at: `build/app/outputs/bundle/release/app-release
 
 ### App Store Listing Information:
 - **App Name:** MDReader
-- **Short Description:** Simple offline Markdown reader
+- **Short Description:** Read and organize markdown documents offline with customizable themes
 - **Full Description:** 
 ```
 MDReader is a simple offline Markdown reader that allows you to read and view Markdown files without any internet connection. Perfect for developers, writers, and anyone who works with Markdown documents.

@@ -168,20 +168,46 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
         children: [
           _buildPerformanceIndicator(),
           Expanded(
-            child: MarkdownViewer(
-              key: ValueKey('large_${_loadedChunks.join('_')}'),
-              markdownContent: _getVisibleContent(),
-              scrollController: _scrollController,
+            child: Stack(
+              children: [
+                Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  child: MarkdownViewer(
+                    key: ValueKey('large_${_loadedChunks.join('_')}'),
+                    markdownContent: _getVisibleContent(),
+                    scrollController: _scrollController,
+                  ),
+                ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: _buildProgressIndicator(context),
+                ),
+              ],
             ),
           ),
         ],
       );
     }
     
-    return MarkdownViewer(
-      key: ValueKey('small_${widget.markdownContent.hashCode}'),
-      markdownContent: widget.markdownContent,
-      scrollController: _scrollController,
+    return Stack(
+      children: [
+        Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
+          child: MarkdownViewer(
+            key: ValueKey('small_${widget.markdownContent.hashCode}'),
+            markdownContent: widget.markdownContent,
+            scrollController: _scrollController,
+          ),
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: _buildProgressIndicator(context),
+        ),
+      ],
     );
   }
 
@@ -238,5 +264,43 @@ class _StreamingMarkdownViewerState extends State<StreamingMarkdownViewer> {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  Widget _buildProgressIndicator(BuildContext context) {
+    return StreamBuilder<double>(
+      stream: Stream.periodic(const Duration(milliseconds: 100), (_) {
+        if (_scrollController.hasClients) {
+          final position = _scrollController.position;
+          final progress = position.pixels / position.maxScrollExtent;
+          return progress.clamp(0.0, 1.0);
+        }
+        return 0.0;
+      }),
+      builder: (context, snapshot) {
+        final progress = snapshot.data ?? 0.0;
+        final percentage = (progress * 100).toInt();
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(
+            '$percentage%',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -22,9 +22,7 @@ class MarkdownViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
-        final readingSettings = themeProvider.readingSettings;
-        
-        return Markdown(
+        final markdownWidget = Markdown(
           data: markdownContent,
           controller: scrollController,
           selectable: true,
@@ -51,6 +49,10 @@ class MarkdownViewer extends StatelessWidget {
             }
           },
         );
+
+        // Return just the markdown widget
+        // Scrollbar and progress are handled by StreamingMarkdownViewer
+        return markdownWidget;
       },
     );
   }

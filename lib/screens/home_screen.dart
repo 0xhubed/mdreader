@@ -226,22 +226,20 @@ class SettingsDialog extends StatelessWidget {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Custom theme selector
               ListTile(
-                title: const Text(AppStrings.themeLabel),
-                trailing: DropdownButton<AppThemeMode>(
-                  value: themeProvider.themeMode,
-                  onChanged: (AppThemeMode? newValue) {
-                    if (newValue != null) {
-                      themeProvider.setThemeMode(newValue);
-                    }
-                  },
-                  items: AppThemeMode.values.map((AppThemeMode mode) {
-                    return DropdownMenuItem<AppThemeMode>(
-                      value: mode,
-                      child: Text(_getThemeModeDisplayName(mode)),
-                    );
-                  }).toList(),
-                ),
+                leading: const Icon(Icons.palette),
+                title: const Text('Theme'),
+                subtitle: Text(themeProvider.activeCustomTheme?.name ?? 'Default'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ThemeGallery(),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 title: const Text(AppStrings.fontSizeLabel),
@@ -260,21 +258,6 @@ class SettingsDialog extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: const Text('Custom Themes'),
-                subtitle: const Text('Create and manage custom themes'),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ThemeGallery(),
-                    ),
-                  );
-                },
-              ),
             ],
           );
         },
@@ -288,14 +271,4 @@ class SettingsDialog extends StatelessWidget {
     );
   }
 
-  String _getThemeModeDisplayName(AppThemeMode mode) {
-    switch (mode) {
-      case AppThemeMode.light:
-        return 'Light';
-      case AppThemeMode.dark:
-        return 'Dark';
-      case AppThemeMode.system:
-        return 'System';
-    }
-  }
 }
