@@ -10,9 +10,35 @@ class FileService {
     r'<script[^>]*>.*?</script>',
     r'javascript:',
     r'data:text/html',
-    r'onclick\s*=',
-    r'onload\s*=',
-    r'onerror\s*=',
+    r'onclick\s*=\s*["\x27]',
+    r'onload\s*=\s*["\x27]',
+    r'onerror\s*=\s*["\x27]',
+    r'onmouseover\s*=\s*["\x27]',
+    r'onfocus\s*=\s*["\x27]',
+    r'onblur\s*=\s*["\x27]',
+    r'onsubmit\s*=\s*["\x27]',
+    r'onchange\s*=\s*["\x27]',
+    r'eval\s*\(',
+    r'document\.write\s*\(',
+    r'document\.writeln\s*\(',
+    r'innerHTML\s*=',
+    r'outerHTML\s*=',
+    r'document\.cookie',
+    r'window\.location',
+    r'location\.href',
+    r'location\.replace',
+    r'location\.assign',
+    r'<iframe[^>]*>',
+    r'<embed[^>]*>',
+    r'<object[^>]*>',
+    r'<link[^>]*rel\s*=\s*["\x27]stylesheet["\x27][^>]*>',
+    r'<style[^>]*>.*?</style>',
+    r'expression\s*\(',
+    r'url\s*\(\s*["\x27]?javascript:',
+    r'@import\s+["\x27]?javascript:',
+    r'vbscript:',
+    r'data:text/javascript',
+    r'data:application/javascript',
   ];
 
   Future<Document?> pickAndReadFile() async {
@@ -149,21 +175,41 @@ class FileService {
   }
 
   void _validateContentSecurity(String content) {
+    // Remove code blocks from security scanning to avoid false positives
+    final contentWithoutCodeBlocks = _removeCodeBlocks(content);
+    
     // Check for potentially dangerous patterns
     for (final pattern in _dangerousPatterns) {
       final regex = RegExp(pattern, caseSensitive: false);
-      if (regex.hasMatch(content)) {
+      if (regex.hasMatch(contentWithoutCodeBlocks)) {
         throw FileServiceException('File contains potentially unsafe content');
       }
     }
 
     // Check for excessive HTML tags (might indicate HTML file disguised as markdown)
-    final htmlTagCount = RegExp(r'<[^>]+>').allMatches(content).length;
-    final totalLines = content.split('\n').length;
+    // Only check outside of code blocks
+    final htmlTagCount = RegExp(r'<[^>]+>').allMatches(contentWithoutCodeBlocks).length;
+    final totalLines = contentWithoutCodeBlocks.split('\n').length;
     
     if (htmlTagCount > totalLines * 0.3) {
       throw FileServiceException('File appears to be HTML rather than Markdown');
     }
+  }
+
+  String _removeCodeBlocks(String content) {
+    // Remove fenced code blocks (```language...```)
+    String result = content.replaceAll(RegExp(r'```[\s\S]*?```', multiLine: true), '');
+    
+    // Remove inline code (`code`)
+    result = result.replaceAll(RegExp(r'`[^`]*`'), '');
+    
+    // Remove indented code blocks (4+ spaces at start of line)
+    final lines = result.split('\n');
+    final filteredLines = lines.where((line) => 
+      !RegExp(r'^\s{4,}').hasMatch(line) || line.trim().isEmpty
+    ).toList();
+    
+    return filteredLines.join('\n');
   }
 
   bool _containsBinaryContent(String content) {
