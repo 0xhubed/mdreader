@@ -92,12 +92,18 @@
             color: #ffffff;
         }
         
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        
         .download-btn {
             display: inline-flex;
             align-items: center;
             gap: 12px;
-            background: #ffffff;
-            color: #000000;
             padding: 16px 32px;
             text-decoration: none;
             border-radius: 50px;
@@ -107,11 +113,151 @@
             border: 2px solid #ffffff;
         }
         
-        .download-btn:hover {
+        .download-btn.primary {
+            background: #ffffff;
+            color: #000000;
+        }
+        
+        .download-btn.primary:hover {
             background: #000000;
             color: #ffffff;
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .download-btn.secondary {
+            background: transparent;
+            color: #ffffff;
+        }
+        
+        .download-btn.secondary:hover {
+            background: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .demo-section {
+            padding: 100px 0;
+            background: #f8f8f8;
+        }
+        
+        .screenshots-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .screenshot-item {
+            text-align: center;
+        }
+        
+        .screenshot {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .screenshot:hover {
+            transform: scale(1.05);
+        }
+        
+        .screenshot-caption {
+            margin-top: 16px;
+            font-size: 1rem;
+            color: #666666;
+            font-weight: 500;
+        }
+        
+        .tech-stack {
+            padding: 100px 0;
+            background: white;
+        }
+        
+        .tech-subtitle, .demo-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666666;
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .journey-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-bottom: 80px;
+        }
+        
+        .journey-item {
+            background: #f8f8f8;
+            padding: 32px 24px;
+            border-radius: 16px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .journey-item:hover {
+            transform: translateY(-4px);
+        }
+        
+        .journey-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .journey-item h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        .journey-item p {
+            color: #666666;
+            line-height: 1.6;
+        }
+        
+        .tech-stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+        
+        .tech-category {
+            background: #f8f8f8;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid #000000;
+        }
+        
+        .tech-category h4 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tech-tag {
+            background: #000000;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
         
         .features {
@@ -210,7 +356,7 @@
         }
         
         .about-content {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             text-align: center;
             font-size: 1.2rem;
@@ -222,27 +368,44 @@
             margin-bottom: 24px;
         }
         
-        .stats {
+        .value-props {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
             margin-top: 60px;
         }
         
-        .stat {
+        .value-prop {
+            background: #f8f8f8;
+            padding: 32px 24px;
+            border-radius: 16px;
             text-align: center;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
         }
         
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .value-prop:hover {
+            border-color: #000000;
+            transform: translateY(-4px);
+        }
+        
+        .value-prop-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .value-prop h3 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
             color: #000000;
-            margin-bottom: 8px;
+            font-weight: 600;
         }
         
-        .stat-label {
+        .value-prop p {
             color: #666666;
-            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0;
         }
         
         footer {
@@ -321,22 +484,119 @@
                     <img src="app_icon.png" alt="MDReader App Icon">
                 </div>
                 <h1>MDReader</h1>
-                <div class="tagline">Privacy-First Markdown Reader</div>
-                <div class="subtitle">Zero data collection, beautiful typography, exceptional reading experience for your markdown files</div>
-                <a href="#" class="download-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
-                    </svg>
-                    Download from Google Play
-                </a>
+                <div class="tagline">AI-Assisted Cross-Platform Development</div>
+                <div class="subtitle">Demonstrating rapid technology adoption: C#/C++ developer → Flutter mobile app using modern AI tools</div>
+                <div class="hero-buttons">
+                    <a href="https://play.google.com/apps/internaltest/4701751354738741902" class="download-btn primary" target="_blank">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                        </svg>
+                        Try Internal Test
+                    </a>
+                    <a href="https://github.com/0xhubed/mdreader" class="download-btn secondary" target="_blank">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        View Source Code
+                    </a>
+                </div>
             </div>
         </div>
     </header>
 
+    <section class="demo-section">
+        <div class="container">
+            <h2>Live App Demo</h2>
+            <div class="demo-subtitle">See the app in action - built with Flutter, Firebase, and modern AI assistance</div>
+            <div class="screenshots-container">
+                <div class="screenshot-item">
+                    <img src="screenshot1.png" alt="MDReader Home Screen" class="screenshot">
+                    <div class="screenshot-caption">Clean home interface with recent files</div>
+                </div>
+                <div class="screenshot-item">
+                    <img src="screenshot2.png" alt="MDReader Reading Interface" class="screenshot">
+                    <div class="screenshot-caption">Beautiful markdown rendering with rich features</div>
+                </div>
+                <div class="screenshot-item">
+                    <img src="screenshot3.png" alt="MDReader Markdown Support" class="screenshot">
+                    <div class="screenshot-caption">Full CommonMark support with syntax highlighting</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-stack">
+        <div class="container">
+            <h2>Development Journey</h2>
+            <div class="tech-subtitle">From C#/C++ to Cross-Platform Mobile Development with AI</div>
+            <div class="journey-grid">
+                <div class="journey-item">
+                    <div class="journey-icon">🤖</div>
+                    <h3>AI-Assisted Development</h3>
+                    <p>Leveraged Claude, GitHub Copilot, and modern AI tools to rapidly learn Flutter and Dart, demonstrating adaptability in new technology stacks.</p>
+                </div>
+                <div class="journey-item">
+                    <div class="journey-icon">📱</div>
+                    <h3>Cross-Platform Expertise</h3>
+                    <p>Built for Android, iOS, Web, and Desktop using Flutter framework, showing versatility beyond traditional C#/C++ development.</p>
+                </div>
+                <div class="journey-item">
+                    <div class="journey-icon">🏗️</div>
+                    <h3>Full-Stack Implementation</h3>
+                    <p>Integrated Firebase backend, implemented local storage, state management, and responsive UI design - complete end-to-end solution.</p>
+                </div>
+                <div class="journey-item">
+                    <div class="journey-icon">🚀</div>
+                    <h3>Production Ready</h3>
+                    <p>Deployed to Google Play Console with proper CI/CD, security measures, and professional app store assets.</p>
+                </div>
+            </div>
+            
+            <div class="tech-stack-grid">
+                <div class="tech-category">
+                    <h4>Frontend</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Flutter</span>
+                        <span class="tech-tag">Dart</span>
+                        <span class="tech-tag">Material Design</span>
+                        <span class="tech-tag">Responsive UI</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>Backend & Services</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Firebase</span>
+                        <span class="tech-tag">Local Storage</span>
+                        <span class="tech-tag">File System API</span>
+                        <span class="tech-tag">State Management</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>AI Tools Used</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Claude AI</span>
+                        <span class="tech-tag">GitHub Copilot</span>
+                        <span class="tech-tag">AI Code Review</span>
+                        <span class="tech-tag">Rapid Prototyping</span>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h4>DevOps & Deployment</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Google Play Console</span>
+                        <span class="tech-tag">Vercel</span>
+                        <span class="tech-tag">Git</span>
+                        <span class="tech-tag">Automated Testing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="features">
         <div class="container">
-            <h2>Why Choose MDReader?</h2>
-            <div class="features-subtitle">Experience markdown reading like never before with these powerful features</div>
+            <h2>Key Features Implemented</h2>
+            <div class="features-subtitle">Showcasing technical capabilities and user-centric design</div>
             <div class="feature-grid">
                 <div class="feature">
                     <div class="feature-icon">🔒</div>
@@ -369,25 +629,29 @@
 
     <section class="about">
         <div class="container">
-            <h2>Built for Privacy & Performance</h2>
-            <div class="about-subtitle">The markdown reader that respects your data and delivers excellence</div>
+            <h2>Born from Real-World AI Development Needs</h2>
+            <div class="about-subtitle">A developer's solution to the markdown reading challenge in the AI era</div>
             <div class="about-content">
-                <p>MDReader is crafted for people who value their privacy and demand a superior reading experience. Whether you're reviewing documentation, reading notes, or enjoying any markdown content, MDReader delivers beautiful typography without compromising your personal data.</p>
-                <p>Perfect for developers, writers, students, researchers, and anyone who works with markdown files regularly. Experience the difference of a truly private, offline-first application.</p>
+                <p>Working extensively with generative AI tools in my development workflow, I found myself constantly creating markdown specifications, documentation, and prompts. The problem? Android had no quality markdown reader that could handle my workflow efficiently.</p>
+                <p>MDReader solves this real-world friction point. Built with privacy-first principles and beautiful typography, it enables seamless review of AI-generated specifications and documentation directly on mobile devices.</p>
+                <p><strong>Future Vision:</strong> This app is the foundation for a larger goal - enabling mobile control of agentic AI tools running on workstations, creating a unified development ecosystem that maximizes efficiency across devices.</p>
             </div>
             
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number">0%</div>
-                    <div class="stat-label">Data Collection</div>
+            <div class="value-props">
+                <div class="value-prop">
+                    <div class="value-prop-icon">🤖</div>
+                    <h3>AI Workflow Integration</h3>
+                    <p>Designed for developers who live in the AI ecosystem - seamlessly review specifications, prompts, and documentation generated by AI tools.</p>
                 </div>
-                <div class="stat">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Offline</div>
+                <div class="value-prop">
+                    <div class="value-prop-icon">📱</div>
+                    <h3>Mobile-First AI Development</h3>
+                    <p>Enables productive AI development workflows on mobile devices, breaking free from desktop-only limitations.</p>
                 </div>
-                <div class="stat">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">File Size Support</div>
+                <div class="value-prop">
+                    <div class="value-prop-icon">🔮</div>
+                    <h3>Agentic AI Control Platform</h3>
+                    <p>Foundation for future mobile control of workstation-based AI agents, creating a unified cross-device development ecosystem.</p>
                 </div>
             </div>
         </div>
@@ -397,28 +661,32 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>MDReader</h4>
+                    <h4>MDReader App</h4>
                     <ul class="footer-links">
                         <li><a href="#features">Features</a></li>
                         <li><a href="privacy.html">Privacy Policy</a></li>
-                        <li><a href="mailto:0xhubed@protonmail.ch">Support</a></li>
+                        <li><a href="https://play.google.com/apps/internaltest/4701751354738741902" target="_blank">Try Internal Test</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h4>Download</h4>
+                    <h4>Developer Portfolio</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Google Play Store</a></li>
+                        <li><a href="https://danielhuber.dev" target="_blank">danielhuber.dev</a></li>
+                        <li><a href="https://github.com/0xhubed/mdreader" target="_blank">Source Code</a></li>
+                        <li><a href="https://linkedin.com/in/danielhuber-dev" target="_blank">LinkedIn</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h4>Connect</h4>
+                    <h4>Technology</h4>
                     <ul class="footer-links">
-                        <li><a href="mailto:0xhubed@protonmail.ch">Contact Us</a></li>
+                        <li><a href="https://flutter.dev" target="_blank">Flutter Framework</a></li>
+                        <li><a href="https://firebase.google.com" target="_blank">Firebase Backend</a></li>
+                        <li><a href="https://claude.ai" target="_blank">AI-Assisted Development</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 MDReader. All rights reserved. Made with privacy in mind.</p>
+                <p>&copy; 2025 Daniel Huber. AI-assisted development showcase. Built with Flutter, Firebase, and modern AI tools.</p>
             </div>
         </div>
     </footer>

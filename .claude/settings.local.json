@@ -25,7 +25,9 @@
       "Bash(mv:*)",
       "Bash(cp:*)",
       "Bash(git push:*)",
-      "Bash(npm init:*)"
+      "Bash(npm init:*)",
+      "Bash(vercel:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": []
   }
