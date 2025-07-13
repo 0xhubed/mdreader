@@ -1,6 +1,11 @@
 # 📝 MDReader
 
-A privacy-first, offline Markdown reader built with Flutter that provides exceptional reading experience for local `.md` files.
+A privacy-first, offline Markdown reader built with Flutter - born from real-world AI development needs. 
+
+**The Story:** Working extensively with generative AI tools, I constantly create markdown specifications, documentation, and prompts, but Android lacked a quality markdown reader for efficient mobile review. MDReader solves this friction point while serving as the foundation for future mobile control of agentic AI tools.
+
+🌐 **Live Demo:** [mdreader.app](https://mdreader-website-oxuu3itht-0xhubeds-projects-c85e7463.vercel.app)  
+📱 **Try It:** [Google Play Internal Test](https://play.google.com/apps/internaltest/4701751354738741902)
 
 ## ✨ Features
 
@@ -159,14 +164,11 @@ MDReader is designed with privacy as the core principle:
 - Links (display only - no navigation)
 - Images (local files only)
 
-## 🔮 Future Enhancements
+## 🔮 Future Vision
 
-See `FEATURE_ENHANCEMENT_PLAN.md` for planned features including:
-- Table support
-- Search functionality
-- Recent files
-- Table of contents
-- Export capabilities
+**Immediate Enhancements:** See `FEATURE_ENHANCEMENT_PLAN.md` for planned features including table support, search functionality, recent files, table of contents, and export capabilities.
+
+**Long-term Vision:** This app serves as the foundation for mobile control of agentic AI tools running on workstations, creating a unified development ecosystem that maximizes efficiency across devices. The goal is seamless integration between mobile markdown review and desktop AI tool orchestration.
 
 ## 🤝 Contributing
 
@@ -176,15 +178,21 @@ This project follows the implementation plan in `MVP_PLAN.md`. Contributions sho
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🛠️ Development Notes
+## 🛠️ Technical Stack & AI Development
 
+**Core Technologies:**
 - Built with Flutter 3.x and Dart 3.x
-- Uses Provider for state management
+- Uses Provider for state management  
 - Google Fonts for typography
 - SharedPreferences for settings storage
 - File picker for local file access
 
-The app is designed to be lightweight, fast, and respectful of user privacy while providing an excellent markdown reading experience.
+**AI-Assisted Development:**
+- Leveraged Claude AI and GitHub Copilot for rapid Flutter adoption
+- Demonstrates cross-platform development from C#/C++ background
+- Full-stack implementation from UI/UX to Firebase integration
+
+The app showcases rapid technology adoption using modern AI tools while maintaining privacy-first principles and delivering an excellent markdown reading experience.
 
 ## 🚀 Development Scripts
 
